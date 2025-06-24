@@ -1,5 +1,4 @@
 require('dotenv').config();
-const { a } = require('framer-motion/client');
 const jwt = require('jsonwebtoken');
 
 const auth = (req, res, next) => {

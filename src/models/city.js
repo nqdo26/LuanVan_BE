@@ -1,4 +1,3 @@
-const { details, title } = require('framer-motion/client');
 const mongoose = require('mongoose');
 const slugify = require('slugify');
 
