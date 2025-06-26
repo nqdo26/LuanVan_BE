@@ -5,6 +5,14 @@ const { createUser, handleLogin, getAccount } = require('../controllers/userCont
 const auth = require('../../middleware/auth');
 const delay = require('../../middleware/delay');
 const { createAdmin, getUsers, deleteUser, updateUserAdmin } = require('../controllers/adminController');
+const { createTag, updateTag, deleteTag, getTags, getTagById } = require('../controllers/tagController');
+const {
+    createCityType,
+    getCityTypes,
+    getCityTypeById,
+    updateCityType,
+    deleteCityType,
+} = require('../controllers/cityTypeController');
 
 const routerAPI = express.Router();
 
@@ -22,5 +30,19 @@ routerAPI.get('/account', auth, getAccount);
 routerAPI.get('/users', auth, getUsers);
 routerAPI.delete('/users/:id', auth, deleteUser);
 routerAPI.patch('/users/:id/admin', auth, updateUserAdmin);
+
+//Tag management
+routerAPI.post('/createTag', auth, createTag);
+routerAPI.get('/tags', auth, getTags);
+routerAPI.get('/tags/:id', getTagById);
+routerAPI.put('/tags/:id', auth, updateTag);
+routerAPI.delete('/tags/:id', auth, deleteTag);
+
+//City Type management
+routerAPI.post('/createCityType', auth, createCityType);
+routerAPI.get('/cityTypes', auth, getCityTypes);
+routerAPI.get('/cityTypes/:id', getCityTypeById);
+routerAPI.put('/cityTypes/:id', auth, updateCityType);
+routerAPI.delete('/cityTypes/:id', auth, deleteCityType);
 
 module.exports = routerAPI;
