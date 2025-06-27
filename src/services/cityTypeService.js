@@ -1,4 +1,4 @@
-const CityType = require('../models/CityType');
+const CityType = require('../models/cityType');
 
 const createCityTypeService = async (title) => {
     try {
