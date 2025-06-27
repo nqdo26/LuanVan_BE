@@ -69,6 +69,8 @@ const updateUserAdminService = async (id, isAdmin) => {
     }
 };
 
+
+
 module.exports = {
     createAdminService,
     updateUserAdminService,

@@ -38,10 +38,7 @@ const updateTagService = async (id, title) => {
             };
         }
 
-        const existingTag = await Tag.findOne({
-            title: title,
-            _id: { $ne: id },
-        });
+        const existingTag = await Tag.findOne({ title: title });
         if (existingTag) {
             return {
                 EC: 1,
@@ -49,8 +46,7 @@ const updateTagService = async (id, title) => {
             };
         }
 
-        tag.title = title;
-        const result = await tag.save();
+        const result = await Tag.findByIdAndUpdate(id, { title: title }, { new: true });
 
         return {
             EC: 0,
@@ -68,15 +64,13 @@ const updateTagService = async (id, title) => {
 
 const deleteTagService = async (id) => {
     try {
-        const tag = await Tag.findById(id);
+        const tag = await Tag.findByIdAndDelete(id);
         if (!tag) {
             return {
                 EC: 1,
                 EM: 'Tag not found',
             };
         }
-
-        await Tag.findByIdAndDelete(id);
 
         return {
             EC: 0,
@@ -94,11 +88,27 @@ const deleteTagService = async (id) => {
 
 const getTagsService = async () => {
     try {
-        const tags = await Tag.find();
+        let result = await Tag.aggregate([
+            {
+                $lookup: {
+                    from: 'destinations',
+                    localField: '_id',
+                    foreignField: 'tags',
+                    as: 'destinations',
+                },
+            },
+            {
+                $project: {
+                    title: 1,
+                    destinationsCount: { $size: '$destinations' },
+                },
+            },
+        ]);
+
         return {
             EC: 0,
             EM: 'Get tags successfully',
-            data: tags,
+            data: result,
         };
     } catch (error) {
         console.log(error);
@@ -109,34 +119,9 @@ const getTagsService = async () => {
     }
 };
 
-const getTagByIdService = async (id) => {
-    try {
-        const tag = await Tag.findById(id);
-        if (!tag) {
-            return {
-                EC: 1,
-                EM: 'Tag not found',
-            };
-        }
-
-        return {
-            EC: 0,
-            EM: 'Get tag successfully',
-            data: tag,
-        };
-    } catch (error) {
-        console.log(error);
-        return {
-            EC: 2,
-            EM: 'An error occurred while getting tag',
-        };
-    }
-};
-
 module.exports = {
     createTagService,
     updateTagService,
     deleteTagService,
     getTagsService,
-    getTagByIdService,
 };
