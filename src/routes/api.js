@@ -7,6 +7,8 @@ const delay = require('../../middleware/delay');
 const { createAdmin, getUsers, deleteUser, updateUserAdmin } = require('../controllers/adminController');
 const { createTag, updateTag, deleteTag, getTags } = require('../controllers/tagController');
 const { createCityType, getCityTypes, updateCityType, deleteCityType } = require('../controllers/cityTypeController');
+const { uploadByFolder } = require('../../middleware/multer');
+const { createCity } = require('../controllers/cityController');
 
 const routerAPI = express.Router();
 
@@ -36,5 +38,7 @@ routerAPI.post('/cityType', auth, createCityType);
 routerAPI.get('/cityTypes', auth, getCityTypes);
 routerAPI.put('/cityTypes/:id', auth, updateCityType);
 routerAPI.delete('/cityTypes/:id', auth, deleteCityType);
+
+routerAPI.post('/city', auth, uploadByFolder('cityImages').array('images', 4), createCity);
 
 module.exports = routerAPI;

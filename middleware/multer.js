@@ -1,88 +1,43 @@
 const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinary = require('cloudinary').v2;
 
-// Cấu hình nơi lưu trữ file avatar
-const avatarStorage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        const dir = 'src/public/uploads/images/avatar/';
-        cb(null, dir); // Thư mục lưu trữ file
-    },
-    filename: function (req, file, cb) {
-        const filename = Date.now() + path.extname(file.originalname);
-        const normalizedPath = path.normalize(filename);
-        cb(null, normalizedPath); // Đặt tên file với đường dẫn chuẩn hóa
-    },
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Cấu hình nơi lưu trữ file cover
-const coverStorage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        const dir = 'src/public/uploads/images/cover/';
-        cb(null, dir); // Thư mục lưu trữ file
-    },
-    filename: function (req, file, cb) {
-        const filename = Date.now() + path.extname(file.originalname);
-        const normalizedPath = path.normalize(filename);
-        cb(null, normalizedPath); // Đặt tên file với đường dẫn chuẩn hóa
-    },
-});
+/**
 
-const contentStorage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        const dir = 'src/public/uploads/lessons/';
-        cb(null, dir); // Thư mục lưu trữ file
-    },
-    filename: function (req, file, cb) {
-        const filename = Date.now() + path.extname(file.originalname);
-        const normalizedPath = path.normalize(filename);
-        cb(null, normalizedPath); // Đặt tên file với đường dẫn chuẩn hóa
-    },
-});
+ * @param {string} folderName 
+ * @returns 
+ */
+function uploadByFolder(folderName) {
+    const storage = new CloudinaryStorage({
+        cloudinary: cloudinary,
+        params: {
+            folder: `GoOhNo/${folderName}`,
+            allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+            public_id: (req, file) => `${Date.now()}-${file.originalname}`,
+        },
+    });
 
-// Kiểm tra loại file
-const fileFilter = (req, file, cb) => {
-    if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png') {
-        cb(null, true);
-    } else {
-        cb(new Error('File type not supported'), false);
-    }
-};
+    return multer({
+        storage: storage,
+        limits: {
+            fileSize: 10 * 1024 * 1024,
+            files: 4,
+        },
+        fileFilter: (req, file, cb) => {
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+            if (allowedTypes.includes(file.mimetype)) {
+                cb(null, true);
+            } else {
+                cb(new Error('Chỉ chấp nhận ảnh JPEG, PNG, WEBP'), false);
+            }
+        },
+    });
+}
 
-const contentFileFilter = (req, file, cb) => {
-    if (file.mimetype === 'text/html') {
-        cb(null, true);
-    } else {
-        cb(new Error('File type not supported'), false);
-    }
-};
-
-const uploadAvatar = multer({
-    storage: avatarStorage,
-    limits: {
-        fileSize: 1024 * 1024 * 5, // Giới hạn kích thước file 5MB
-    },
-    fileFilter: fileFilter,
-});
-
-const uploadCover = multer({
-    storage: coverStorage,
-    limits: {
-        fileSize: 1024 * 1024 * 100, // Giới hạn kích thước file 5MB
-    },
-    fileFilter: fileFilter,
-});
-
-const uploadContent = multer({
-    storage: contentStorage,
-    limits: {
-        fileSize: 1024 * 1024 * 10, // Giới hạn kích thước file 10MB
-    },
-    fileFilter: contentFileFilter,
-});
-
-module.exports = {
-    uploadAvatar,
-    uploadCover,
-    uploadContent,
-};
+module.exports = { uploadByFolder };

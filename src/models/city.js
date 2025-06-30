@@ -5,7 +5,6 @@ const citySchema = new mongoose.Schema({
     name: String,
     slug: { type: String, unique: true },
     description: String,
-    aiDescription: String,
     type: { type: mongoose.Schema.Types.ObjectId, ref: 'cityType' },
     images: {
         type: [String],
@@ -33,7 +32,7 @@ const citySchema = new mongoose.Schema({
 
 citySchema.pre('save', function (next) {
     if (!this.slug) {
-        this.slug = slugify(this.title, { lower: true });
+        this.slug = slugify(this.name, { lower: true });
     }
     next();
 });
