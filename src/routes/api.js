@@ -7,6 +7,12 @@ const delay = require('../../middleware/delay');
 const { createAdmin, getUsers, deleteUser, updateUserAdmin } = require('../controllers/adminController');
 const { createTag, updateTag, deleteTag, getTags } = require('../controllers/tagController');
 const { createCityType, getCityTypes, updateCityType, deleteCityType } = require('../controllers/cityTypeController');
+const {
+    createDestinationType,
+    getDestinationTypes,
+    updateDestinationType,
+    deleteDestinationType,
+} = require('../controllers/destinationTypeController');
 const { uploadByFolder } = require('../../middleware/multer');
 const {
     createCity,
@@ -46,6 +52,12 @@ routerAPI.post('/cityType', auth, createCityType);
 routerAPI.get('/cityTypes', auth, getCityTypes);
 routerAPI.put('/cityTypes/:id', auth, updateCityType);
 routerAPI.delete('/cityTypes/:id', auth, deleteCityType);
+
+//Destination Type management
+routerAPI.post('/destinationType', auth, createDestinationType);
+routerAPI.get('/destinationTypes', auth, getDestinationTypes);
+routerAPI.put('/destinationTypes/:id', auth, updateDestinationType);
+routerAPI.delete('/destinationTypes/:id', auth, deleteDestinationType);
 
 routerAPI.post('/city', auth, uploadByFolder('cityImages').array('images', 4), createCity);
 routerAPI.get('/cities', auth, getCities);
