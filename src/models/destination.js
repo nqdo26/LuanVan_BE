@@ -3,10 +3,9 @@ const slugify = require('slugify');
 
 const destinationSchema = new mongoose.Schema({
     title: String,
-    aiDescription: String,
     slug: String,
     type: { type: mongoose.Schema.Types.ObjectId, ref: 'type' },
-    tag: [{ type: mongoose.Schema.Types.ObjectId, ref: 'tag' }],
+    tags: [{ type: mongoose.Schema.Types.ObjectId, ref: 'tag' }],
     location: {
         address: String,
         city: { type: mongoose.Schema.Types.ObjectId, ref: 'city' },
@@ -23,7 +22,7 @@ const destinationSchema = new mongoose.Schema({
         totalRate: { type: Number, default: 0 },
         averageRating: { type: Number, default: 0 },
     },
-    detail: {
+    details: {
         description: String,
         highlight: [String],
         services: [String],

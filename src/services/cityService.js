@@ -1,6 +1,6 @@
 const City = require('../models/city');
 
-const createCityService = async (data, imageFiles) => {
+const createCityService = async (data, imageFiles, userId) => {
     try {
         if (
             !data.title?.trim() ||
@@ -35,7 +35,6 @@ const createCityService = async (data, imageFiles) => {
             }
         }
 
-        // Validate weather data
         if (!Array.isArray(weatherData) || weatherData.length !== 4) {
             return {
                 EC: 4,
@@ -64,15 +63,31 @@ const createCityService = async (data, imageFiles) => {
             }
         }
 
+        // Parse type data if it's a string (for multiple types)
+        let typeData = data.type || [];
+        if (typeof typeData === 'string') {
+            try {
+                typeData = JSON.parse(typeData);
+            } catch (error) {
+                typeData = [];
+            }
+        }
+
+        // Ensure typeData is an array
+        if (!Array.isArray(typeData)) {
+            typeData = typeData ? [typeData] : [];
+        }
+
         const images = imageFiles.map((file) => file.path);
 
         const newCity = new City({
             name: data.title,
             description: data.description,
-            type: data.type || null,
+            type: typeData,
             images,
             weather: weatherData,
             info: infoData,
+            createdBy: userId,
         });
 
         await newCity.save();
@@ -83,9 +98,8 @@ const createCityService = async (data, imageFiles) => {
             data: newCity,
         };
     } catch (error) {
-        console.error('Error in createCityService:', error);
         return {
-            EC: 99,
+            EC: 2,
             EM: 'Tạo thành phố thất bại, đã xảy ra lỗi server',
         };
     }
@@ -93,7 +107,10 @@ const createCityService = async (data, imageFiles) => {
 
 const getCitiesService = async () => {
     try {
-        const cities = await City.find({}).populate('type', 'title').sort({ createdAt: -1 });
+        const cities = await City.find({})
+            .populate('type', 'title')
+            .populate('createdBy', 'fullName email')
+            .sort({ createdAt: -1 });
 
         return {
             EC: 0,
@@ -109,7 +126,113 @@ const getCitiesService = async () => {
     }
 };
 
+const updateCityService = async (id, data, imageFiles, userId) => {
+    try {
+        const existingCity = await City.findById(id);
+        if (!existingCity) {
+            return {
+                EC: 1,
+                EM: 'Thành phố không tồn tại.',
+            };
+        }
+
+        // Parse weather data if it's a string
+        let weatherData = data.weather;
+        if (typeof weatherData === 'string') {
+            try {
+                weatherData = JSON.parse(weatherData);
+            } catch (error) {
+                return {
+                    EC: 3,
+                    EM: 'Dữ liệu thời tiết không hợp lệ.',
+                };
+            }
+        }
+
+        // Parse info data if it's a string
+        let infoData = data.info || [];
+        if (typeof infoData === 'string') {
+            try {
+                infoData = JSON.parse(infoData);
+            } catch (error) {
+                infoData = [];
+            }
+        }
+
+        // Parse type data if it's a string (for multiple types)
+        let typeData = data.type || [];
+        if (typeof typeData === 'string') {
+            try {
+                typeData = JSON.parse(typeData);
+            } catch (error) {
+                typeData = [];
+            }
+        }
+
+        // Ensure typeData is an array
+        if (!Array.isArray(typeData)) {
+            typeData = typeData ? [typeData] : [];
+        }
+
+        const updateData = {
+            name: data.title || existingCity.name,
+            description: data.description || existingCity.description,
+            type: typeData.length > 0 ? typeData : existingCity.type,
+            weather: weatherData || existingCity.weather,
+            info: infoData || existingCity.info,
+        };
+
+        // Update images if provided
+        if (imageFiles && imageFiles.length > 0) {
+            updateData.images = imageFiles.map((file) => file.path);
+        }
+
+        const updatedCity = await City.findByIdAndUpdate(id, updateData, { new: true })
+            .populate('type', 'title')
+            .populate('createdBy', 'fullName email');
+
+        return {
+            EC: 0,
+            EM: 'Cập nhật thành phố thành công',
+            data: updatedCity,
+        };
+    } catch (error) {
+        console.error('Error in updateCityService:', error);
+        return {
+            EC: 2,
+            EM: 'Cập nhật thành phố thất bại, đã xảy ra lỗi server',
+        };
+    }
+};
+
+const deleteCityService = async (id) => {
+    try {
+        const existingCity = await City.findById(id);
+        if (!existingCity) {
+            return {
+                EC: 1,
+                EM: 'Thành phố không tồn tại.',
+            };
+        }
+
+        await City.findByIdAndDelete(id);
+
+        return {
+            EC: 0,
+            EM: 'Xóa thành phố thành công',
+        };
+    } catch (error) {
+        console.error('Error in deleteCityService:', error);
+        return {
+            EC: 2,
+            EM: 'Xóa thành phố thất bại, đã xảy ra lỗi server',
+        };
+    }
+};
+
 module.exports = {
     createCityService,
     getCitiesService,
+    updateCityService,
+    deleteCityService,
 };
