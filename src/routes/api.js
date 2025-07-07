@@ -8,7 +8,15 @@ const { createAdmin, getUsers, deleteUser, updateUserAdmin } = require('../contr
 const { createTag, updateTag, deleteTag, getTags } = require('../controllers/tagController');
 const { createCityType, getCityTypes, updateCityType, deleteCityType } = require('../controllers/cityTypeController');
 const { uploadByFolder } = require('../../middleware/multer');
-const { createCity, getCities, updateCity, deleteCity } = require('../controllers/cityController');
+const {
+    createCity,
+    getCities,
+    getCityById,
+    getCityBySlug,
+    getCityByIdAndUpdate,
+    updateCity,
+    deleteCity,
+} = require('../controllers/cityController');
 
 const routerAPI = express.Router();
 
@@ -41,6 +49,12 @@ routerAPI.delete('/cityTypes/:id', auth, deleteCityType);
 
 routerAPI.post('/city', auth, uploadByFolder('cityImages').array('images', 4), createCity);
 routerAPI.get('/cities', auth, getCities);
+routerAPI.get('/cities/:id', getCityById);
+routerAPI.get('/city/:slug', getCityBySlug); // Route mới cho slug
+routerAPI
+    .route('/cities/:id/edit')
+    .get(auth, getCityByIdAndUpdate)
+    .put(auth, uploadByFolder('cityImages').array('images', 4), getCityByIdAndUpdate);
 routerAPI.put('/cities/:id', auth, uploadByFolder('cityImages').array('images', 4), updateCity);
 routerAPI.delete('/cities/:id', auth, deleteCity);
 

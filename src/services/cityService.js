@@ -126,6 +126,152 @@ const getCitiesService = async () => {
     }
 };
 
+const getCityByIdService = async (id) => {
+    try {
+        const city = await City.findById(id).populate('type', 'title').populate('createdBy', 'fullName email');
+
+        if (!city) {
+            return {
+                EC: 1,
+                EM: 'Thành phố không tồn tại.',
+            };
+        }
+
+        return {
+            EC: 0,
+            EM: 'Lấy thông tin thành phố thành công',
+            data: city,
+        };
+    } catch (error) {
+        console.error('Error in getCityByIdService:', error);
+        return {
+            EC: 2,
+            EM: 'Lấy thông tin thành phố thất bại',
+        };
+    }
+};
+
+const getCityBySlugService = async (slug) => {
+    try {
+        const city = await City.findOne({ slug: slug })
+            .populate('type', 'title')
+            .populate('createdBy', 'fullName email');
+
+        if (!city) {
+            return {
+                EC: 1,
+                EM: 'Thành phố không tồn tại.',
+            };
+        }
+
+        // Tăng views khi có người xem
+        await City.findByIdAndUpdate(city._id, { $inc: { views: 1 } });
+
+        return {
+            EC: 0,
+            EM: 'Lấy thông tin thành phố thành công',
+            data: city,
+        };
+    } catch (error) {
+        console.error('Error in getCityBySlugService:', error);
+        return {
+            EC: 2,
+            EM: 'Lấy thông tin thành phố thất bại',
+        };
+    }
+};
+
+const getCityByIdAndUpdateService = async (id, data = null, imageFiles = [], userId = null) => {
+    try {
+        if (!data) {
+            const city = await City.findById(id).populate('type', 'title').populate('createdBy', 'fullName email');
+
+            if (!city) {
+                return {
+                    EC: 1,
+                    EM: 'Thành phố không tồn tại.',
+                };
+            }
+
+            return {
+                EC: 0,
+                EM: 'Lấy thông tin thành phố thành công',
+                data: city,
+            };
+        }
+
+        const existingCity = await City.findById(id);
+        if (!existingCity) {
+            return {
+                EC: 1,
+                EM: 'Thành phố không tồn tại.',
+            };
+        }
+
+        let weatherData = data.weather;
+        if (typeof weatherData === 'string') {
+            try {
+                weatherData = JSON.parse(weatherData);
+            } catch (error) {
+                return {
+                    EC: 3,
+                    EM: 'Dữ liệu thời tiết không hợp lệ.',
+                };
+            }
+        }
+
+        let infoData = data.info || [];
+        if (typeof infoData === 'string') {
+            try {
+                infoData = JSON.parse(infoData);
+            } catch (error) {
+                infoData = [];
+            }
+        }
+        let typeData = data.type || [];
+        if (typeof typeData === 'string') {
+            try {
+                typeData = JSON.parse(typeData);
+            } catch (error) {
+                typeData = [];
+            }
+        }
+
+        if (!Array.isArray(typeData)) {
+            typeData = typeData ? [typeData] : [];
+        }
+
+        const updateData = {
+            name: data.title || existingCity.name,
+            description: data.description || existingCity.description,
+            type: typeData.length > 0 ? typeData : existingCity.type,
+            weather: weatherData || existingCity.weather,
+            info: infoData || existingCity.info,
+        };
+
+        // Update images if provided
+        if (imageFiles && imageFiles.length > 0) {
+            updateData.images = imageFiles.map((file) => file.path);
+        }
+
+        const updatedCity = await City.findByIdAndUpdate(id, updateData, { new: true })
+            .populate('type', 'title')
+            .populate('createdBy', 'fullName email');
+
+        return {
+            EC: 0,
+            EM: 'Cập nhật thành phố thành công',
+            data: updatedCity,
+        };
+    } catch (error) {
+        console.error('Error in getCityByIdAndUpdateService:', error);
+        return {
+            EC: 2,
+            EM: 'Có lỗi xảy ra khi xử lý thành phố',
+        };
+    }
+};
+
 const updateCityService = async (id, data, imageFiles, userId) => {
     try {
         const existingCity = await City.findById(id);
@@ -233,6 +379,9 @@ const deleteCityService = async (id) => {
 module.exports = {
     createCityService,
     getCitiesService,
+    getCityByIdService,
+    getCityBySlugService,
+    getCityByIdAndUpdateService,
     updateCityService,
     deleteCityService,
 };
