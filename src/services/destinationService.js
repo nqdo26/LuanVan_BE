@@ -2,7 +2,6 @@ const Destination = require('../models/destination');
 const slugify = require('slugify');
 
 const createDestination = async (data, files) => {
-    // Album: nhận từng trường riêng biệt nếu có
     data.album = {
         space: files && files.space ? files.space.map((f) => f.path) : [],
         fnb: files && files.fnb ? files.fnb.map((f) => f.path) : [],
@@ -10,8 +9,6 @@ const createDestination = async (data, files) => {
         highlight: files && files.highlight ? files.highlight.map((f) => f.path) : [],
     };
 
-    // details
-    // Ưu tiên lấy newHighlight, newServices, newUsefulInfo nếu có, nếu không thì lấy highlight, services, usefulInfo
     data.details = {
         description: data.description,
         highlight: data.newHighlight && data.newHighlight.length > 0 ? [data.newHighlight] : data.highlight || [],
@@ -23,20 +20,60 @@ const createDestination = async (data, files) => {
         usefulInfo: data.newUsefulInfo && data.newUsefulInfo.length > 0 ? [data.newUsefulInfo] : data.usefulInfo || [],
     };
 
-    // openHour
-    if (data.openHour) {
+    const defaultOpenHour = {
+        mon: { open: '', close: '' },
+        tue: { open: '', close: '' },
+        wed: { open: '', close: '' },
+        thu: { open: '', close: '' },
+        fri: { open: '', close: '' },
+        sat: { open: '', close: '' },
+        sun: { open: '', close: '' },
+        allday: false,
+    };
+    if (!data.openHour) {
+        data.openHour = defaultOpenHour;
+    } else if (typeof data.openHour === 'string') {
         try {
-            if (typeof data.openHour === 'string') {
-                data.openHour = JSON.parse(data.openHour);
+            data.openHour = JSON.parse(data.openHour);
+        } catch {
+            data.openHour = defaultOpenHour;
+        }
+    } else if (typeof data.openHour === 'object') {
+        data.openHour = { ...defaultOpenHour, ...data.openHour };
+        Object.keys(defaultOpenHour).forEach((key) => {
+            if (key === 'allday') return;
+            if (typeof data.openHour[key] !== 'object') {
+                data.openHour[key] = { open: '', close: '' };
+            } else {
+                data.openHour[key] = {
+                    open: data.openHour[key].open || '',
+                    close: data.openHour[key].close || '',
+                };
             }
+        });
+        if (typeof data.openHour.allday === 'boolean') {
+            data.openHour.allday = data.openHour.allday;
+        } else {
+            data.openHour.allday = false;
+        }
+    }
+
+    if (!data.contactInfo) {
+        data.contactInfo = { phone: '', website: '', facebook: '', instagram: '' };
+    } else if (typeof data.contactInfo === 'string') {
+        try {
+            data.contactInfo = JSON.parse(data.contactInfo);
         } catch {}
     }
 
-    // location
     data.location = {
         address: data.address,
         city: data.city,
     };
+
+    if (data.createdBy) {
+        data.createdBy = data.createdBy;
+    }
 
     if (!data.slug && data.title) {
         data.slug = slugify(data.title, { lower: true });

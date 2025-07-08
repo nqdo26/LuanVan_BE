@@ -14,7 +14,7 @@ const destinationSchema = new mongoose.Schema({
         highlight: [String],
         space: [String],
         fnb: [String],
-        extra: [String], 
+        extra: [String],
     },
     statistics: {
         views: { type: Number, default: 0 },
@@ -49,7 +49,7 @@ const destinationSchema = new mongoose.Schema({
     comments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'comment' }],
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'user' },
+    createdBy: { type: String }, // Lưu email người tạo
 });
 
 destinationSchema.pre('save', function (next) {

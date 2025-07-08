@@ -9,6 +9,14 @@ const createDestination = async (req, res) => {
             highlight: req.files?.highlight || [],
         };
         let body = { ...req.body };
+        // Debug: log req.user để kiểm tra token decode
+        console.log('=== [createDestination] req.user:', req.user);
+        // Gán createdBy là email user từ req.user nếu có, hoặc lấy từ body nếu FE gửi lên
+        if (req.user && req.user.email) {
+            body.createdBy = req.user.email;
+        } else if (body.createdBy) {
+            body.createdBy = body.createdBy;
+        }
         [
             'highlight',
             'services',

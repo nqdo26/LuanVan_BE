@@ -15,7 +15,7 @@ const auth = (req, res, next) => {
                 req.user = {
                     fullName: decoded.fullName,
                     email: decoded.email,
-                    name: decoded.name,
+
                     avatar: decoded.avatar,
                     isAdmin: decoded.isAdmin,
                     favortites: decoded.favortites,
