@@ -2,6 +2,16 @@ const Destination = require('../models/destination');
 const slugify = require('slugify');
 
 const createDestination = async (data, files) => {
+    // Kiểm tra trùng title (slug)
+    if (data.title) {
+        const slug = slugify(data.title, { lower: true });
+        const existed = await Destination.findOne({ slug });
+        if (existed) {
+            return { EC: 1, EM: 'Tên địa điểm đã tồn tại. Vui lòng chọn tên khác.' };
+        }
+        data.slug = slug;
+    }
+
     data.album = {
         space: files && files.space ? files.space.map((f) => f.path) : [],
         fnb: files && files.fnb ? files.fnb.map((f) => f.path) : [],
@@ -75,12 +85,9 @@ const createDestination = async (data, files) => {
         data.createdBy = data.createdBy;
     }
 
-    if (!data.slug && data.title) {
-        data.slug = slugify(data.title, { lower: true });
-    }
     const destination = new Destination(data);
     await destination.save();
-    return destination;
+    return { EC: 0, EM: 'Tạo địa điểm thành công', data: destination };
 };
 
 const getDestinations = async () => {

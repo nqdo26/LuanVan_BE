@@ -10,8 +10,14 @@ const {
 
 const createCity = async (req, res) => {
     try {
-        const userId = req.user?.id;
-        const result = await createCityService(req.body, req.files || [], userId);
+        let body = { ...req.body };
+        // Lấy email người tạo từ req.user nếu có
+        if (req.user && req.user.email) {
+            body.createdBy = req.user.email;
+        } else if (body.createdBy) {
+            body.createdBy = body.createdBy;
+        }
+        const result = await createCityService(body, req.files || [], body.createdBy);
         return res.status(200).json(result);
     } catch (error) {
         return res.status(500).json({
@@ -62,21 +68,21 @@ const getCityBySlug = async (req, res) => {
         });
     }
 };
-
 const getCityByIdAndUpdate = async (req, res) => {
     try {
         const { id } = req.params;
-        const userId = req.user?.id;
-
-        const isUpdateRequest = req.method === 'PUT' || Object.keys(req.body).length > 0;
-
+        let body = req.body ? { ...req.body } : null;
+        // Lấy email người cập nhật từ req.user nếu có
+        if (body && req.user && req.user.email) {
+            body.createdBy = req.user.email;
+        }
+        const isUpdateRequest = req.method === 'PUT' || (body && Object.keys(body).length > 0);
         const result = await getCityByIdAndUpdateService(
             id,
-            isUpdateRequest ? req.body : null,
+            isUpdateRequest ? body : null,
             req.files || [],
-            userId,
+            body && body.createdBy ? body.createdBy : null,
         );
-
         return res.status(200).json(result);
     } catch (error) {
         return res.status(500).json({
@@ -90,8 +96,12 @@ const getCityByIdAndUpdate = async (req, res) => {
 const updateCity = async (req, res) => {
     try {
         const { id } = req.params;
-        const userId = req.user?.id;
-        const result = await updateCityService(id, req.body, req.files || [], userId);
+        let body = { ...req.body };
+        // Lấy email người cập nhật từ req.user nếu có
+        if (req.user && req.user.email) {
+            body.createdBy = req.user.email;
+        }
+        const result = await updateCityService(id, body, req.files || [], body.createdBy);
         return res.status(200).json(result);
     } catch (error) {
         return res.status(500).json({

@@ -49,7 +49,7 @@ const destinationSchema = new mongoose.Schema({
     comments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'comment' }],
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
-    createdBy: { type: String }, // Lưu email người tạo
+    createdBy: { type: String }, 
 });
 
 destinationSchema.pre('save', function (next) {
