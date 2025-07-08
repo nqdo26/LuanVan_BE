@@ -23,11 +23,14 @@ function uploadByFolder(folderName) {
         },
     });
 
+    // Cho phép giới hạn số lượng file động qua folderName
+    let fileLimit = 4;
+    if (folderName === 'destinationImages') fileLimit = 15;
     return multer({
         storage: storage,
         limits: {
             fileSize: 10 * 1024 * 1024,
-            files: 4,
+            files: fileLimit,
         },
         fileFilter: (req, file, cb) => {
             const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];

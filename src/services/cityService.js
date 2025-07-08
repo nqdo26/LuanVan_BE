@@ -99,7 +99,7 @@ const createCityService = async (data, imageFiles, userId) => {
         };
     } catch (error) {
         return {
-            EC: 2,
+            EC: 99,
             EM: 'Tạo thành phố thất bại, đã xảy ra lỗi server',
         };
     }

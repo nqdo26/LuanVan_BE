@@ -23,6 +23,15 @@ const {
     updateCity,
     deleteCity,
 } = require('../controllers/cityController');
+const {
+    createDestination,
+    getDestinations,
+    getDestinationById,
+    getDestinationBySlug,
+    getDestinationByIdAndUpdate,
+    updateDestination,
+    deleteDestination,
+} = require('../controllers/destinationController');
 
 const routerAPI = express.Router();
 
@@ -62,12 +71,34 @@ routerAPI.delete('/destinationTypes/:id', auth, deleteDestinationType);
 routerAPI.post('/city', auth, uploadByFolder('cityImages').array('images', 4), createCity);
 routerAPI.get('/cities', auth, getCities);
 routerAPI.get('/cities/:id', getCityById);
-routerAPI.get('/city/:slug', getCityBySlug); // Route mới cho slug
+routerAPI.get('/city/:slug', getCityBySlug);
 routerAPI
     .route('/cities/:id/edit')
     .get(auth, getCityByIdAndUpdate)
     .put(auth, uploadByFolder('cityImages').array('images', 4), getCityByIdAndUpdate);
 routerAPI.put('/cities/:id', auth, uploadByFolder('cityImages').array('images', 4), updateCity);
 routerAPI.delete('/cities/:id', auth, deleteCity);
+
+// Destination management
+routerAPI.post(
+    '/destination',
+    auth,
+    uploadByFolder('destinationImages').fields([
+        { name: 'images', maxCount: 10 },
+        { name: 'album_space', maxCount: 10 },
+        { name: 'album_fnb', maxCount: 10 },
+        { name: 'album_extra', maxCount: 10 },
+    ]),
+    createDestination,
+);
+routerAPI.get('/destinations', auth, getDestinations);
+routerAPI.get('/destinations/:id', getDestinationById);
+routerAPI.get('/destination/:slug', getDestinationBySlug);
+routerAPI
+    .route('/destinations/:id/edit')
+    .get(auth, getDestinationByIdAndUpdate)
+    .put(auth, uploadByFolder('destinationImages').array('images', 10), getDestinationByIdAndUpdate);
+routerAPI.put('/destinations/:id', auth, uploadByFolder('destinationImages').array('images', 10), updateDestination);
+routerAPI.delete('/destinations/:id', auth, deleteDestination);
 
 module.exports = routerAPI;
