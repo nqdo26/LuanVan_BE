@@ -79,7 +79,6 @@ routerAPI
 routerAPI.put('/cities/:id', auth, uploadByFolder('cityImages').array('images', 4), updateCity);
 routerAPI.delete('/cities/:id', auth, deleteCity);
 
-// Destination management
 routerAPI.post(
     '/destination',
     auth,
@@ -96,9 +95,17 @@ routerAPI.get('/destinations/:id', getDestinationById);
 routerAPI.get('/destination/:slug', getDestinationBySlug);
 routerAPI
     .route('/destinations/:id/edit')
-    .get(auth, getDestinationByIdAndUpdate)
-    .put(auth, uploadByFolder('destinationImages').array('images', 10), getDestinationByIdAndUpdate);
-routerAPI.put('/destinations/:id', auth, uploadByFolder('destinationImages').array('images', 10), updateDestination);
+    .get(auth, getDestinationById) // Lấy thông tin địa điểm để chỉnh sửa
+    .put(
+        auth,
+        uploadByFolder('destinationImages').fields([
+            { name: 'images', maxCount: 15 },
+            { name: 'album_space', maxCount: 10 },
+            { name: 'album_fnb', maxCount: 10 },
+            { name: 'album_extra', maxCount: 10 },
+        ]),
+        updateDestination,
+    );
 routerAPI.delete('/destinations/:id', auth, deleteDestination);
 
 module.exports = routerAPI;

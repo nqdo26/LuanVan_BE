@@ -23,11 +23,10 @@ const createDestination = async (data, files) => {
         description: data.description,
         highlight: data.newHighlight && data.newHighlight.length > 0 ? [data.newHighlight] : data.highlight || [],
         services: data.newServices && data.newServices.length > 0 ? [data.newServices] : data.services || [],
-        cultureType:
-            data.newCultureType && data.newCultureType.length > 0 ? [data.newCultureType] : data.cultureType || [],
-        activities: data.newActivities && data.newActivities.length > 0 ? [data.newActivities] : data.activities || [],
-        fee: data.newFee && data.newFee.length > 0 ? [data.newFee] : data.fee || [],
-        usefulInfo: data.newUsefulInfo && data.newUsefulInfo.length > 0 ? [data.newUsefulInfo] : data.usefulInfo || [],
+        cultureType: data.cultureType || [],
+        activities: data.activities || [],
+        fee: data.fee || [],
+        usefulInfo: data.usefulInfo || [],
     };
 
     const defaultOpenHour = {
@@ -68,6 +67,15 @@ const createDestination = async (data, files) => {
         }
     }
 
+    // Parse openHour nếu là chuỗi JSON
+    if (typeof data.openHour === 'string') {
+        try {
+            data.openHour = JSON.parse(data.openHour);
+        } catch (err) {
+            console.error('Lỗi khi parse openHour:', err);
+        }
+    }
+
     if (!data.contactInfo) {
         data.contactInfo = { phone: '', website: '', facebook: '', instagram: '' };
     } else if (typeof data.contactInfo === 'string') {
@@ -103,10 +111,28 @@ const getDestinationBySlug = async (slug) => {
 };
 
 const updateDestination = async (id, data, files) => {
+    data.album = {
+        space: Array.isArray(data.album_space) ? data.album_space : [],
+        fnb: Array.isArray(data.album_fnb) ? data.album_fnb : [],
+        extra: Array.isArray(data.album_extra) ? data.album_extra : [],
+        highlight: data.album?.highlight || [],
+    };
+
+    delete data.album_space;
+    delete data.album_fnb;
+    delete data.album_extra;
+
     if (files && files.length > 0) {
-        data.album = { highlight: files.map((f) => f.path) };
+        const newHighlight = files.map((f) => f.path);
+        data.album.highlight = newHighlight;
     }
-    return await Destination.findByIdAndUpdate(id, data, { new: true });
+
+    data.updatedAt = new Date();
+    const updatedDestination = await Destination.findByIdAndUpdate(id, data, {
+        new: true,
+        overwrite: true,
+    });
+    return updatedDestination;
 };
 
 const deleteDestination = async (id) => {

@@ -2,23 +2,10 @@ const City = require('../models/city');
 
 const createCityService = async (data, imageFiles, userId) => {
     try {
-        if (
-            !data.title?.trim() ||
-            !data.description?.trim() ||
-            !data.weather ||
-            !imageFiles ||
-            imageFiles.length === 0
-        ) {
-            return {
-                EC: 1,
-                EM: 'Vui lòng nhập đầy đủ thông tin bắt buộc và tải lên ít nhất 1 ảnh.',
-            };
-        }
-
         const existingCity = await City.findOne({ name: data.title.trim() });
         if (existingCity) {
             return {
-                EC: 2,
+                EC: 1,
                 EM: 'Tên thành phố đã tồn tại. Vui lòng chọn tên khác.',
             };
         }
@@ -29,31 +16,13 @@ const createCityService = async (data, imageFiles, userId) => {
                 weatherData = JSON.parse(weatherData);
             } catch (error) {
                 return {
-                    EC: 3,
+                    EC: 2,
                     EM: 'Dữ liệu thời tiết không hợp lệ.',
                 };
             }
         }
 
-        if (!Array.isArray(weatherData) || weatherData.length !== 4) {
-            return {
-                EC: 4,
-                EM: 'Dữ liệu thời tiết phải có đầy đủ 4 mùa.',
-            };
-        }
 
-        const weatherValid = weatherData.every(
-            (w) => w.minTemp !== undefined && w.maxTemp !== undefined && w.note?.trim(),
-        );
-
-        if (!weatherValid) {
-            return {
-                EC: 5,
-                EM: 'Vui lòng điền đầy đủ thông tin thời tiết cho tất cả các mùa.',
-            };
-        }
-
-        // Parse info data if it's a string
         let infoData = data.info || [];
         if (typeof infoData === 'string') {
             try {
@@ -62,8 +31,6 @@ const createCityService = async (data, imageFiles, userId) => {
                 infoData = [];
             }
         }
-
-        // Parse type data if it's a string (for multiple types)
         let typeData = data.type || [];
         if (typeof typeData === 'string') {
             try {
@@ -73,7 +40,6 @@ const createCityService = async (data, imageFiles, userId) => {
             }
         }
 
-        // Ensure typeData is an array
         if (!Array.isArray(typeData)) {
             typeData = typeData ? [typeData] : [];
         }
