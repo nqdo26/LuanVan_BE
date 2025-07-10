@@ -41,15 +41,15 @@ const destinationSchema = new mongoose.Schema({
         allday: Boolean,
     },
     contactInfo: {
-        phone: String,
-        website: String,
-        facebook: String,
-        instagram: String,
+        phone: { type: String, default: '' },
+        website: { type: String, default: '' },
+        facebook: { type: String, default: '' },
+        instagram: { type: String, default: '' },
     },
     comments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'comment' }],
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
-    createdBy: { type: String }, 
+    createdBy: { type: String },
 });
 
 destinationSchema.pre('save', function (next) {

@@ -108,9 +108,52 @@ const updateDestination = async (req, res) => {
     try {
         const id = req.params.id;
         const data = req.body;
-        const files = req.files;
 
-        console.log('Data received in BE:', data);
+        // Parse các trường object từ JSON string về object
+        [
+            'highlight',
+            'services',
+            'cultureType',
+            'activities',
+            'fee',
+            'usefulInfo',
+            'newHighlight',
+            'newServices',
+        ].forEach((key) => {
+            if (typeof data[key] === 'string') {
+                try {
+                    data[key] = JSON.parse(data[key]);
+                } catch {}
+            }
+        });
+
+        // Parse details nếu là string
+        if (data.details && typeof data.details === 'string') {
+            try {
+                data.details = JSON.parse(data.details);
+            } catch {}
+        }
+
+        // Parse openHour nếu là string
+        if (data.openHour && typeof data.openHour === 'string') {
+            try {
+                data.openHour = JSON.parse(data.openHour);
+            } catch {}
+        }
+
+        // Parse contactInfo nếu là string
+        if (data.contactInfo && typeof data.contactInfo === 'string') {
+            try {
+                data.contactInfo = JSON.parse(data.contactInfo);
+            } catch {}
+        }
+
+        // Parse album nếu là string
+        if (data.album && typeof data.album === 'string') {
+            try {
+                data.album = JSON.parse(data.album);
+            } catch {}
+        }
 
         if (data.tags && Array.isArray(data.tags)) {
             data.tags = data.tags.map((tag) => {
@@ -123,9 +166,11 @@ const updateDestination = async (req, res) => {
             });
         }
 
-        console.log('Processed tags in BE:', data.tags);
+        if (req.user && req.user.email) {
+            data.createdBy = req.user.email;
+        }
 
-        const updated = await destinationService.updateDestination(id, data, files);
+        const updated = await destinationService.updateDestination(id, data, req.files || []);
         if (!updated) {
             return res.status(404).json({
                 EC: 1,

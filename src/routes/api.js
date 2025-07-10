@@ -95,7 +95,7 @@ routerAPI.get('/destinations/:id', getDestinationById);
 routerAPI.get('/destination/:slug', getDestinationBySlug);
 routerAPI
     .route('/destinations/:id/edit')
-    .get(auth, getDestinationById) // Lấy thông tin địa điểm để chỉnh sửa
+    .get(auth, getDestinationById) 
     .put(
         auth,
         uploadByFolder('destinationImages').fields([
