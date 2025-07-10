@@ -72,7 +72,7 @@ const createDestination = async (data, files) => {
         try {
             data.openHour = JSON.parse(data.openHour);
         } catch (err) {
-            console.error('Lỗi khi parse openHour:', err);
+            data.openHour = {};
         }
     }
 
@@ -134,7 +134,7 @@ const updateDestination = async (id, data, files) => {
                     const existingImages = JSON.parse(data[existingKey]);
                     finalImages = [...existingImages];
                 } catch (e) {
-                    console.error(`Error parsing ${existingKey}:`, e);
+                    finalImages = [];
                 }
             }
 
@@ -157,8 +157,6 @@ const updateDestination = async (id, data, files) => {
         processAlbumField('album_fnb', 'fnb', 'existing_album_fnb');
         processAlbumField('album_extra', 'extra', 'existing_album_extra');
         processAlbumField('images', 'highlight', 'existing_images');
-
-        console.log('Album update data:', updateData.album);
     }
 
     // Xử lý location - cập nhật address và city
@@ -175,7 +173,6 @@ const updateDestination = async (id, data, files) => {
             try {
                 data.openHour = JSON.parse(data.openHour);
             } catch (err) {
-                console.error('Lỗi khi parse openHour:', err);
                 data.openHour = currentDestination.openHour;
             }
         }
@@ -227,7 +224,6 @@ const updateDestination = async (id, data, files) => {
             try {
                 updateData.contactInfo = JSON.parse(data.contactInfo);
             } catch (err) {
-                console.error('Lỗi khi parse contactInfo:', err);
                 updateData.contactInfo = data.contactInfo;
             }
         } else {
@@ -241,7 +237,6 @@ const updateDestination = async (id, data, files) => {
             try {
                 updateData.details = JSON.parse(data.details);
             } catch (err) {
-                console.error('Lỗi khi parse details:', err);
                 updateData.details = data.details;
             }
         } else {

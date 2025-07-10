@@ -109,7 +109,6 @@ const updateDestination = async (req, res) => {
         const id = req.params.id;
         const data = req.body;
 
-        // Parse các trường object từ JSON string về object
         [
             'highlight',
             'services',
@@ -127,28 +126,24 @@ const updateDestination = async (req, res) => {
             }
         });
 
-        // Parse details nếu là string
         if (data.details && typeof data.details === 'string') {
             try {
                 data.details = JSON.parse(data.details);
             } catch {}
         }
 
-        // Parse openHour nếu là string
         if (data.openHour && typeof data.openHour === 'string') {
             try {
                 data.openHour = JSON.parse(data.openHour);
             } catch {}
         }
 
-        // Parse contactInfo nếu là string
         if (data.contactInfo && typeof data.contactInfo === 'string') {
             try {
                 data.contactInfo = JSON.parse(data.contactInfo);
             } catch {}
         }
 
-        // Parse album nếu là string
         if (data.album && typeof data.album === 'string') {
             try {
                 data.album = JSON.parse(data.album);
@@ -160,7 +155,6 @@ const updateDestination = async (req, res) => {
                 if (mongoose.Types.ObjectId.isValid(tag)) {
                     return new mongoose.Types.ObjectId(tag);
                 } else {
-                    console.warn(`Invalid tag format received: ${tag}`);
                     return tag;
                 }
             });

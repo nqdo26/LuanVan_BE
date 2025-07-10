@@ -22,7 +22,6 @@ const createCityService = async (data, imageFiles, userId) => {
             }
         }
 
-
         let infoData = data.info || [];
         if (typeof infoData === 'string') {
             try {
@@ -130,7 +129,6 @@ const getCityBySlugService = async (slug) => {
             };
         }
 
-        // Tăng views khi có người xem
         await City.findByIdAndUpdate(city._id, { $inc: { views: 1 } });
 
         return {
@@ -215,10 +213,25 @@ const getCityByIdAndUpdateService = async (id, data = null, imageFiles = [], use
             info: infoData || existingCity.info,
         };
 
-        // Update images if provided
-        if (imageFiles && imageFiles.length > 0) {
-            updateData.images = imageFiles.map((file) => file.path);
+        // Xử lý ảnh - kết hợp ảnh cũ còn lại và ảnh mới
+        let finalImages = existingCity.images || [];
+
+        // Nếu có existing_images, chỉ giữ lại những ảnh được chỉ định
+        if (data.existing_images && Array.isArray(data.existing_images)) {
+            finalImages = data.existing_images;
         }
+
+        // Thêm ảnh mới nếu có
+        if (imageFiles && imageFiles.length > 0) {
+            const newImages = imageFiles.map((file) => file.path);
+            finalImages = [...finalImages, ...newImages];
+        }
+
+        updateData.images = finalImages;
+
+        // Loại bỏ existing_images khỏi otherData để không lưu vào DB
+        const { existing_images, ...otherData } = data;
+        Object.assign(updateData, otherData);
 
         const updatedCity = await City.findByIdAndUpdate(id, updateData, { new: true })
             .populate('type', 'title')
@@ -248,7 +261,6 @@ const updateCityService = async (id, data, imageFiles, userId) => {
             };
         }
 
-        // Parse weather data if it's a string
         let weatherData = data.weather;
         if (typeof weatherData === 'string') {
             try {
@@ -294,10 +306,25 @@ const updateCityService = async (id, data, imageFiles, userId) => {
             info: infoData || existingCity.info,
         };
 
-        // Update images if provided
-        if (imageFiles && imageFiles.length > 0) {
-            updateData.images = imageFiles.map((file) => file.path);
+        // Xử lý ảnh - kết hợp ảnh cũ còn lại và ảnh mới
+        let finalImages = existingCity.images || [];
+
+        // Nếu có existing_images, chỉ giữ lại những ảnh được chỉ định
+        if (data.existing_images && Array.isArray(data.existing_images)) {
+            finalImages = data.existing_images;
         }
+
+        // Thêm ảnh mới nếu có
+        if (imageFiles && imageFiles.length > 0) {
+            const newImages = imageFiles.map((file) => file.path);
+            finalImages = [...finalImages, ...newImages];
+        }
+
+        updateData.images = finalImages;
+
+        // Loại bỏ existing_images khỏi otherData để không lưu vào DB
+        const { existing_images, ...otherData } = data;
+        Object.assign(updateData, otherData);
 
         const updatedCity = await City.findByIdAndUpdate(id, updateData, { new: true })
             .populate('type', 'title')
