@@ -1,9 +1,11 @@
 const {
     createCityService,
     getCitiesService,
+    getCitiesWithDestinationCountService,
     getCityByIdService,
     getCityByIdAndUpdateService,
     updateCityService,
+    getCityDeletionInfoService,
     deleteCityService,
     getCityBySlugService,
 } = require('../services/cityService');
@@ -30,6 +32,19 @@ const createCity = async (req, res) => {
 const getCities = async (req, res) => {
     try {
         const result = await getCitiesService();
+        return res.status(200).json(result);
+    } catch (error) {
+        return res.status(500).json({
+            EC: 2,
+            EM: 'A server error occurred.',
+            error: error.message,
+        });
+    }
+};
+
+const getCitiesWithDestinationCount = async (req, res) => {
+    try {
+        const result = await getCitiesWithDestinationCountService();
         return res.status(200).json(result);
     } catch (error) {
         return res.status(500).json({
@@ -72,11 +87,6 @@ const getCityByIdAndUpdate = async (req, res) => {
         const { id } = req.params;
         let body = req.body ? { ...req.body } : null;
 
-        console.log('=== getCityByIdAndUpdate Controller ===');
-        console.log('Method:', req.method);
-        console.log('ID:', id);
-        console.log('Body:', body);
-
         if (body) {
             ['weather', 'info', 'type'].forEach((key) => {
                 if (typeof body[key] === 'string') {
@@ -93,21 +103,11 @@ const getCityByIdAndUpdate = async (req, res) => {
             }
         }
 
-        // Xác định đây có phải request update không
-        // Chỉ là update khi method là PUT hoặc có actual data (không chỉ createdBy)
         const isUpdateRequest = req.method === 'PUT' || req.method === 'PATCH';
 
-        // Chỉ thêm createdBy khi đây là update request
         if (isUpdateRequest && body && req.user && req.user.email) {
             body.createdBy = req.user.email;
         }
-
-        console.log('isUpdateRequest:', isUpdateRequest);
-        console.log('Calling service with params:');
-        console.log('- id:', id);
-        console.log('- data:', isUpdateRequest ? body : null);
-        console.log('- files:', req.files || []);
-        console.log('- userId:', isUpdateRequest && body && body.createdBy ? body.createdBy : null);
 
         const result = await getCityByIdAndUpdateService(
             id,
@@ -116,7 +116,6 @@ const getCityByIdAndUpdate = async (req, res) => {
             isUpdateRequest && body && body.createdBy ? body.createdBy : null,
         );
 
-        console.log('Service result:', result);
         return res.status(200).json(result);
     } catch (error) {
         return res.status(500).json({
@@ -175,12 +174,28 @@ const deleteCity = async (req, res) => {
     }
 };
 
+const getCityDeletionInfo = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await getCityDeletionInfoService(id);
+        return res.status(200).json(result);
+    } catch (error) {
+        return res.status(500).json({
+            EC: 2,
+            EM: 'A server error occurred.',
+            error: error.message,
+        });
+    }
+};
+
 module.exports = {
     createCity,
     getCities,
+    getCitiesWithDestinationCount,
     getCityById,
     getCityBySlug,
     getCityByIdAndUpdate,
     updateCity,
     deleteCity,
+    getCityDeletionInfo,
 };

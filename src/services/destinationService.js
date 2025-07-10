@@ -2,7 +2,6 @@ const Destination = require('../models/destination');
 const slugify = require('slugify');
 
 const createDestination = async (data, files) => {
-    // Kiểm tra trùng title (slug)
     if (data.title) {
         const slug = slugify(data.title, { lower: true });
         const existed = await Destination.findOne({ slug });
@@ -67,7 +66,6 @@ const createDestination = async (data, files) => {
         }
     }
 
-    // Parse openHour nếu là chuỗi JSON
     if (typeof data.openHour === 'string') {
         try {
             data.openHour = JSON.parse(data.openHour);
@@ -111,24 +109,19 @@ const getDestinationBySlug = async (slug) => {
 };
 
 const updateDestination = async (id, data, files) => {
-    // Lấy dữ liệu hiện tại của destination
     const currentDestination = await Destination.findById(id);
     if (!currentDestination) {
         throw new Error('Destination not found');
     }
 
-    // Tạo object để cập nhật, bắt đầu từ dữ liệu hiện tại
     const updateData = {};
 
-    // Xử lý album - kết hợp ảnh cũ còn lại và ảnh mới
     if (files && typeof files === 'object') {
         let hasAlbumUpdate = false;
 
-        // Helper function để xử lý từng loại album
         const processAlbumField = (fieldName, albumKey, existingKey) => {
             let finalImages = [];
 
-            // Lấy ảnh cũ còn lại từ data (nếu có)
             if (data[existingKey]) {
                 try {
                     const existingImages = JSON.parse(data[existingKey]);
@@ -138,13 +131,11 @@ const updateDestination = async (id, data, files) => {
                 }
             }
 
-            // Thêm ảnh mới được upload
             if (files[fieldName] && files[fieldName].length > 0) {
                 const newImages = files[fieldName].map((file) => file.path);
                 finalImages = [...finalImages, ...newImages];
             }
 
-            // Cập nhật album nếu có thay đổi
             if (finalImages.length > 0 || data[existingKey]) {
                 if (!updateData.album) updateData.album = { ...currentDestination.album };
                 updateData.album[albumKey] = finalImages;
@@ -152,14 +143,12 @@ const updateDestination = async (id, data, files) => {
             }
         };
 
-        // Xử lý từng loại album
         processAlbumField('album_space', 'space', 'existing_album_space');
         processAlbumField('album_fnb', 'fnb', 'existing_album_fnb');
         processAlbumField('album_extra', 'extra', 'existing_album_extra');
         processAlbumField('images', 'highlight', 'existing_images');
     }
 
-    // Xử lý location - cập nhật address và city
     if (data.address || data.city) {
         updateData.location = {
             address: data.address || currentDestination.location?.address || '',
@@ -167,7 +156,6 @@ const updateDestination = async (id, data, files) => {
         };
     }
 
-    // Xử lý openHour - giữ lại dữ liệu cũ nếu không có dữ liệu mới
     if (data.openHour) {
         if (typeof data.openHour === 'string') {
             try {
@@ -177,7 +165,6 @@ const updateDestination = async (id, data, files) => {
             }
         }
 
-        // Mapping từ định dạng FE (monday, tuesday...) sang BE (mon, tue...)
         if (data.openHour && typeof data.openHour === 'object') {
             const dayMapping = {
                 monday: 'mon',
@@ -191,7 +178,6 @@ const updateDestination = async (id, data, files) => {
 
             const mappedOpenHour = {};
 
-            // Chuyển đổi từ định dạng FE sang BE
             Object.keys(data.openHour).forEach((key) => {
                 if (dayMapping[key]) {
                     mappedOpenHour[dayMapping[key]] = data.openHour[key];
@@ -202,7 +188,6 @@ const updateDestination = async (id, data, files) => {
                 }
             });
 
-            // Đảm bảo có đầy đủ các ngày
             const defaultOpenHour = {
                 mon: { open: '', close: '' },
                 tue: { open: '', close: '' },
@@ -218,7 +203,6 @@ const updateDestination = async (id, data, files) => {
         }
     }
 
-    // Xử lý contactInfo - parse từ string nếu cần
     if (data.contactInfo) {
         if (typeof data.contactInfo === 'string') {
             try {
@@ -231,7 +215,6 @@ const updateDestination = async (id, data, files) => {
         }
     }
 
-    // Xử lý details - parse từ string nếu cần
     if (data.details) {
         if (typeof data.details === 'string') {
             try {
@@ -244,15 +227,12 @@ const updateDestination = async (id, data, files) => {
         }
     }
 
-    // Bảo vệ trường createdBy - không cho phép ghi đè
     if (data.createdBy && data.createdBy !== currentDestination.createdBy) {
-        // Chỉ cập nhật createdBy nếu trường hiện tại trống hoặc null
         if (!currentDestination.createdBy) {
             updateData.createdBy = data.createdBy;
         }
     }
 
-    // Cập nhật các trường khác (loại bỏ các trường đã xử lý để tránh ghi đè)
     const {
         createdBy,
         openHour,
@@ -272,10 +252,8 @@ const updateDestination = async (id, data, files) => {
     } = data;
     Object.assign(updateData, otherData);
 
-    // Cập nhật thời gian
     updateData.updatedAt = new Date();
 
-    // Sử dụng $set để chỉ cập nhật các trường được chỉ định
     const updatedDestination = await Destination.findByIdAndUpdate(
         id,
         { $set: updateData },

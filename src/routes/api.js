@@ -17,10 +17,12 @@ const { uploadByFolder } = require('../../middleware/multer');
 const {
     createCity,
     getCities,
+    getCitiesWithDestinationCount,
     getCityById,
     getCityBySlug,
     getCityByIdAndUpdate,
     updateCity,
+    getCityDeletionInfo,
     deleteCity,
 } = require('../controllers/cityController');
 const {
@@ -70,6 +72,7 @@ routerAPI.delete('/destinationTypes/:id', auth, deleteDestinationType);
 
 routerAPI.post('/city', auth, uploadByFolder('cityImages').array('images', 4), createCity);
 routerAPI.get('/cities', auth, getCities);
+routerAPI.get('/cities-with-count', auth, getCitiesWithDestinationCount);
 routerAPI.get('/cities/:id', getCityById);
 routerAPI.get('/city/:slug', getCityBySlug);
 routerAPI
@@ -77,6 +80,7 @@ routerAPI
     .get(auth, getCityByIdAndUpdate)
     .put(auth, uploadByFolder('cityImages').array('images', 4), getCityByIdAndUpdate);
 routerAPI.put('/cities/:id', auth, uploadByFolder('cityImages').array('images', 4), updateCity);
+routerAPI.get('/cities/:id/deletion-info', auth, getCityDeletionInfo);
 routerAPI.delete('/cities/:id', auth, deleteCity);
 
 routerAPI.post(
@@ -95,7 +99,7 @@ routerAPI.get('/destinations/:id', getDestinationById);
 routerAPI.get('/destination/:slug', getDestinationBySlug);
 routerAPI
     .route('/destinations/:id/edit')
-    .get(auth, getDestinationById) 
+    .get(auth, getDestinationById)
     .put(
         auth,
         uploadByFolder('destinationImages').fields([
