@@ -35,6 +35,15 @@ const {
     deleteDestination,
     getPopularDestinations,
 } = require('../controllers/destinationController');
+const {
+    createTour,
+    updateTour,
+    deleteTour,
+    getTours,
+    getTourBySlug,
+    getTourById,
+    getPublicTours,
+} = require('../controllers/tourController');
 
 const routerAPI = express.Router();
 
@@ -117,5 +126,14 @@ routerAPI
         updateDestination,
     );
 routerAPI.delete('/destinations/:id', auth, deleteDestination);
+
+// Tour management
+routerAPI.post('/tours', auth, createTour);
+routerAPI.get('/tours', auth, getTours);
+routerAPI.get('/tours/public', getPublicTours);
+routerAPI.get('/tours/:id', auth, getTourById);
+routerAPI.get('/tours/slug/:slug', getTourBySlug);
+routerAPI.put('/tours/:id', auth, updateTour);
+routerAPI.delete('/tours/:id', auth, deleteTour);
 
 module.exports = routerAPI;
