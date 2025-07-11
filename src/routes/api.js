@@ -33,6 +33,7 @@ const {
     getDestinationByIdAndUpdate,
     updateDestination,
     deleteDestination,
+    getPopularDestinations,
 } = require('../controllers/destinationController');
 
 const routerAPI = express.Router();
@@ -70,6 +71,7 @@ routerAPI.get('/destinationTypes', auth, getDestinationTypes);
 routerAPI.put('/destinationTypes/:id', auth, updateDestinationType);
 routerAPI.delete('/destinationTypes/:id', auth, deleteDestinationType);
 
+// City routes
 routerAPI.post('/city', auth, uploadByFolder('cityImages').array('images', 4), createCity);
 routerAPI.get('/cities', auth, getCities);
 routerAPI.get('/cities-with-count', auth, getCitiesWithDestinationCount);
@@ -83,6 +85,7 @@ routerAPI.put('/cities/:id', auth, uploadByFolder('cityImages').array('images', 
 routerAPI.get('/cities/:id/deletion-info', auth, getCityDeletionInfo);
 routerAPI.delete('/cities/:id', auth, deleteCity);
 
+// Destination routes
 routerAPI.post(
     '/destination',
     auth,
@@ -94,9 +97,12 @@ routerAPI.post(
     ]),
     createDestination,
 );
+
+routerAPI.get('/destinations/popular', getPopularDestinations);
 routerAPI.get('/destinations', auth, getDestinations);
 routerAPI.get('/destinations/:id', getDestinationById);
 routerAPI.get('/destination/:slug', getDestinationBySlug);
+
 routerAPI
     .route('/destinations/:id/edit')
     .get(auth, getDestinationById)

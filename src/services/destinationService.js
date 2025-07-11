@@ -272,6 +272,14 @@ const deleteDestination = async (id) => {
     return await Destination.findByIdAndDelete(id);
 };
 
+const getPopularDestinations = async () => {
+    return await Destination.find()
+        .populate('tags')
+        .populate('location.city')
+        .sort({ 'statistics.views': -1 })
+        .limit(15);
+};
+
 module.exports = {
     createDestination,
     getDestinations,
@@ -279,4 +287,5 @@ module.exports = {
     getDestinationBySlug,
     updateDestination,
     deleteDestination,
+    getPopularDestinations,
 };

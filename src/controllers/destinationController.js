@@ -198,6 +198,15 @@ const deleteDestination = async (req, res) => {
     }
 };
 
+const getPopularDestinations = async (req, res) => {
+    try {
+        const destinations = await destinationService.getPopularDestinations();
+        res.status(200).json({ EC: 0, data: destinations });
+    } catch (err) {
+        res.status(500).json({ EC: 1, EM: 'Lấy danh sách địa điểm phổ biến thất bại', error: err.message });
+    }
+};
+
 module.exports = {
     createDestination,
     getDestinations,
@@ -206,4 +215,5 @@ module.exports = {
     updateDestination,
     getDestinationByIdAndUpdate,
     deleteDestination,
+    getPopularDestinations,
 };
