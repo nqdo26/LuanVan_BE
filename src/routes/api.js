@@ -34,6 +34,7 @@ const {
     updateDestination,
     deleteDestination,
     getPopularDestinations,
+    getDestinationsByTags,
 } = require('../controllers/destinationController');
 const {
     createTour,
@@ -108,6 +109,7 @@ routerAPI.post(
 );
 
 routerAPI.get('/destinations/popular', getPopularDestinations);
+routerAPI.get('/destinations/by-tags', getDestinationsByTags);
 routerAPI.get('/destinations', auth, getDestinations);
 routerAPI.get('/destinations/:id', getDestinationById);
 routerAPI.get('/destination/:slug', getDestinationBySlug);

@@ -7,6 +7,7 @@ const tourSchema = new mongoose.Schema(
         slug: { type: String, unique: true },
         city: { type: mongoose.Schema.Types.ObjectId, ref: 'city' },
         description: String,
+        tags: [{ type: mongoose.Schema.Types.ObjectId, ref: 'tag' }],
         duration: {
             starDay: Date,
             endDay: Date,

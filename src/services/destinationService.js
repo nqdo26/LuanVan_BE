@@ -280,6 +280,40 @@ const getPopularDestinations = async () => {
         .limit(15);
 };
 
+const getDestinationsByTags = async (tagIds, cityId = null, limit = 20) => {
+    try {
+        let filter = {
+            tags: { $in: tagIds },
+        };
+
+        // Nếu có cityId thì filter theo city
+        if (cityId) {
+            filter['location.city'] = cityId;
+        }
+
+        const destinations = await Destination.find(filter)
+            .populate([
+                { path: 'tags', select: 'title slug' },
+                { path: 'location.city', select: 'name slug images' },
+            ])
+            .limit(parseInt(limit))
+            .sort({ createdAt: -1 });
+
+        return {
+            EC: 0,
+            EM: 'Lấy danh sách địa điểm theo tags thành công',
+            data: destinations,
+        };
+    } catch (error) {
+        console.error('Error in getDestinationsByTags service:', error);
+        return {
+            EC: 1,
+            EM: 'Lỗi khi lấy danh sách địa điểm theo tags',
+            data: null,
+        };
+    }
+};
+
 module.exports = {
     createDestination,
     getDestinations,
@@ -288,4 +322,5 @@ module.exports = {
     updateDestination,
     deleteDestination,
     getPopularDestinations,
+    getDestinationsByTags,
 };

@@ -15,6 +15,7 @@ const createTourService = async (tourData) => {
         // Populate city và destination thông tin
         await tour.populate([
             { path: 'city', select: 'name slug' },
+            { path: 'tags', select: 'title slug' },
             { path: 'itinerary.descriptions.destinationId', select: 'name slug images' },
         ]);
 
@@ -56,7 +57,8 @@ const getToursService = async (page = 1, limit = 10, search = '', cityId = '') =
 
         const tours = await Tour.find(filter)
             .populate([
-                { path: 'city', select: 'name slug' },
+                { path: 'city', select: 'name slug images description' },
+                { path: 'tags', select: 'title slug' },
                 { path: 'itinerary.descriptions.destinationId', select: 'name slug images' },
             ])
             .sort({ createdAt: -1 })
@@ -94,6 +96,7 @@ const getTourBySlugService = async (slug) => {
     try {
         const tour = await Tour.findOne({ slug }).populate([
             { path: 'city', select: 'name slug images description info weather type views' },
+            { path: 'tags', select: 'title slug' },
             { path: 'itinerary.descriptions.destinationId', select: 'name slug images description address rating' },
         ]);
 
@@ -125,6 +128,7 @@ const getTourByIdService = async (id) => {
     try {
         const tour = await Tour.findById(id).populate([
             { path: 'city', select: 'name slug images description' },
+            { path: 'tags', select: 'title slug' },
             { path: 'itinerary.descriptions.destinationId', select: 'name slug images description address rating' },
         ]);
 
@@ -161,6 +165,7 @@ const updateTourService = async (id, updateData) => {
 
         const tour = await Tour.findByIdAndUpdate(id, updateData, { new: true, runValidators: true }).populate([
             { path: 'city', select: 'name slug images description info weather type views' },
+            { path: 'tags', select: 'title slug' },
             { path: 'itinerary.descriptions.destinationId', select: 'name slug images description address rating' },
         ]);
 

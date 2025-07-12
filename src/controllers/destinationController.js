@@ -207,6 +207,51 @@ const getPopularDestinations = async (req, res) => {
     }
 };
 
+const getDestinationsByTags = async (req, res) => {
+    try {
+        const { tags, cityId, limit = 20 } = req.query;
+
+        if (!tags) {
+            return res.status(400).json({
+                EC: 1,
+                EM: 'Tags parameter is required',
+            });
+        }
+
+        // Parse tags if it's a string
+        let tagIds = [];
+        if (typeof tags === 'string') {
+            try {
+                tagIds = JSON.parse(tags);
+            } catch {
+                tagIds = tags.split(',');
+            }
+        } else if (Array.isArray(tags)) {
+            tagIds = tags;
+        }
+
+        // Validate tag IDs
+        const validTagIds = tagIds.filter((id) => mongoose.Types.ObjectId.isValid(id));
+
+        if (validTagIds.length === 0) {
+            return res.status(400).json({
+                EC: 1,
+                EM: 'No valid tag IDs provided',
+            });
+        }
+
+        const result = await destinationService.getDestinationsByTags(validTagIds, cityId, parseInt(limit));
+        res.status(200).json(result);
+    } catch (error) {
+        console.error('Error in getDestinationsByTags:', error);
+        res.status(500).json({
+            EC: 1,
+            EM: 'Lỗi server khi lấy địa điểm theo tags',
+            error: error.message,
+        });
+    }
+};
+
 module.exports = {
     createDestination,
     getDestinations,
@@ -216,4 +261,5 @@ module.exports = {
     getDestinationByIdAndUpdate,
     deleteDestination,
     getPopularDestinations,
+    getDestinationsByTags,
 };
