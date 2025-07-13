@@ -314,13 +314,86 @@ const getDestinationsByTags = async (tagIds, cityId = null, limit = 20) => {
     }
 };
 
+const searchDestinations = async (query, options = {}) => {
+    try {
+        const { limit = 10, skip = 0 } = options;
+
+        // Create search filter
+        const searchFilter = {
+            $or: [
+                { title: { $regex: query, $options: 'i' } },
+                { 'details.description': { $regex: query, $options: 'i' } },
+                { 'location.address': { $regex: query, $options: 'i' } },
+            ],
+        };
+
+        const destinations = await Destination.find(searchFilter)
+            .populate('tags', 'title')
+            .populate('location.city', 'name slug')
+            .limit(parseInt(limit))
+            .skip(parseInt(skip))
+            .sort({ title: 1 });
+
+        return {
+            EC: 0,
+            EM: 'Tìm kiếm địa điểm thành công',
+            data: destinations,
+        };
+    } catch (error) {
+        console.error('Error in searchDestinations service:', error);
+        return {
+            EC: 1,
+            EM: 'Lỗi khi tìm kiếm địa điểm',
+            data: null,
+        };
+    }
+};
+
+const incrementDestinationViews = async (destinationId) => {
+    try {
+        const destination = await Destination.findByIdAndUpdate(
+            destinationId,
+            {
+                $inc: { 'statistics.views': 1 },
+            },
+            {
+                new: true,
+                runValidators: false,
+            },
+        );
+
+        if (!destination) {
+            return {
+                EC: 1,
+                EM: 'Không tìm thấy địa điểm',
+                data: null,
+            };
+        }
+
+        return {
+            EC: 0,
+            EM: 'Tăng lượt xem thành công',
+            data: destination.statistics.views,
+        };
+    } catch (error) {
+        console.error('Error in incrementDestinationViews service:', error);
+        return {
+            EC: 1,
+            EM: 'Lỗi khi tăng lượt xem',
+            data: null,
+        };
+    }
+};
+
 module.exports = {
     createDestination,
     getDestinations,
+    searchDestinations,
     getDestinationById,
     getDestinationBySlug,
     updateDestination,
     deleteDestination,
     getPopularDestinations,
     getDestinationsByTags,
+    incrementDestinationViews,
 };

@@ -10,6 +10,7 @@ const {
     addNoteToTourService,
     updateDestinationInTourService,
     removeDestinationFromTourService,
+    removeNoteFromTourService,
 } = require('../services/tourService');
 
 const createTour = async (req, res) => {
@@ -302,6 +303,47 @@ const removeDestinationFromTour = async (req, res) => {
     }
 };
 
+const removeNoteFromTour = async (req, res) => {
+    try {
+        const { tourId } = req.params;
+        const { dayId, noteIndex } = req.body;
+
+        if (!dayId) {
+            return res.status(400).json({
+                EC: 1,
+                EM: 'Thiếu thông tin ngày',
+                DT: null,
+            });
+        }
+
+        if (noteIndex === undefined || noteIndex === null) {
+            return res.status(400).json({
+                EC: 1,
+                EM: 'Thiếu thông tin ghi chú cần xóa',
+                DT: null,
+            });
+        }
+
+        const result = await removeNoteFromTourService(tourId, {
+            dayId,
+            noteIndex,
+        });
+
+        return res.status(result.EC === 0 ? 200 : 400).json({
+            EC: result.EC,
+            EM: result.EM,
+            DT: result.DT,
+        });
+    } catch (error) {
+        console.log('Error in removeNoteFromTour controller:', error);
+        return res.status(500).json({
+            EC: 1,
+            EM: 'Lỗi server',
+            DT: null,
+        });
+    }
+};
+
 module.exports = {
     createTour,
     getTours,
@@ -314,4 +356,5 @@ module.exports = {
     addNoteToTour,
     updateDestinationInTour,
     removeDestinationFromTour,
+    removeNoteFromTour,
 };

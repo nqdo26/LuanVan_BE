@@ -24,10 +24,12 @@ const {
     updateCity,
     getCityDeletionInfo,
     deleteCity,
+    incrementCityViewsController,
 } = require('../controllers/cityController');
 const {
     createDestination,
     getDestinations,
+    searchDestinations,
     getDestinationById,
     getDestinationBySlug,
     getDestinationByIdAndUpdate,
@@ -35,6 +37,7 @@ const {
     deleteDestination,
     getPopularDestinations,
     getDestinationsByTags,
+    incrementDestinationViews,
 } = require('../controllers/destinationController');
 const {
     createTour,
@@ -48,6 +51,7 @@ const {
     addNoteToTour,
     updateDestinationInTour,
     removeDestinationFromTour,
+    removeNoteFromTour,
 } = require('../controllers/tourController');
 
 const routerAPI = express.Router();
@@ -96,6 +100,7 @@ routerAPI
     .get(auth, getCityByIdAndUpdate)
     .put(auth, uploadByFolder('cityImages').array('images', 4), getCityByIdAndUpdate);
 routerAPI.put('/cities/:id', auth, uploadByFolder('cityImages').array('images', 4), updateCity);
+routerAPI.patch('/cities/:id/views', incrementCityViewsController);
 routerAPI.get('/cities/:id/deletion-info', auth, getCityDeletionInfo);
 routerAPI.delete('/cities/:id', auth, deleteCity);
 
@@ -113,7 +118,9 @@ routerAPI.post(
 );
 
 routerAPI.get('/destinations/popular', getPopularDestinations);
+routerAPI.get('/destinations/search', searchDestinations);
 routerAPI.get('/destinations/by-tags', getDestinationsByTags);
+routerAPI.patch('/destinations/:id/views', incrementDestinationViews);
 routerAPI.get('/destinations', auth, getDestinations);
 routerAPI.get('/destinations/:id', getDestinationById);
 routerAPI.get('/destination/:slug', getDestinationBySlug);
@@ -147,5 +154,6 @@ routerAPI.post('/tours/:tourId/destinations', auth, addDestinationToTour);
 routerAPI.post('/tours/:tourId/notes', auth, addNoteToTour);
 routerAPI.put('/tours/:tourId/destinations', auth, updateDestinationInTour);
 routerAPI.delete('/tours/:tourId/destinations', auth, removeDestinationFromTour);
+routerAPI.delete('/tours/:tourId/notes', auth, removeNoteFromTour);
 
 module.exports = routerAPI;

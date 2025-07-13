@@ -253,9 +253,68 @@ const getDestinationsByTags = async (req, res) => {
     }
 };
 
+const searchDestinations = async (req, res) => {
+    try {
+        const { q: query, limit = 10, skip = 0 } = req.query;
+
+        if (!query || query.trim() === '') {
+            return res.status(400).json({
+                EC: 1,
+                EM: 'Vui lòng nhập từ khóa tìm kiếm',
+                data: null,
+            });
+        }
+
+        const result = await destinationService.searchDestinations(query.trim(), {
+            limit: parseInt(limit),
+            skip: parseInt(skip),
+        });
+
+        res.status(200).json(result);
+    } catch (error) {
+        console.error('Error in searchDestinations:', error);
+        res.status(500).json({
+            EC: 1,
+            EM: 'Lỗi server khi tìm kiếm địa điểm',
+            error: error.message,
+        });
+    }
+};
+
+const incrementDestinationViews = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Validate destination ID
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                EC: 1,
+                EM: 'ID địa điểm không hợp lệ',
+                data: null,
+            });
+        }
+
+        const result = await destinationService.incrementDestinationViews(id);
+
+        if (result.EC === 0) {
+            res.status(200).json(result);
+        } else {
+            res.status(404).json(result);
+        }
+    } catch (error) {
+        console.error('Error in incrementDestinationViews controller:', error);
+        res.status(500).json({
+            EC: 1,
+            EM: 'Lỗi server khi tăng lượt xem',
+            data: null,
+        });
+    }
+};
+
 module.exports = {
     createDestination,
     getDestinations,
+    searchDestinations,
     getDestinationById,
     getDestinationBySlug,
     updateDestination,
@@ -263,4 +322,5 @@ module.exports = {
     deleteDestination,
     getPopularDestinations,
     getDestinationsByTags,
+    incrementDestinationViews,
 };

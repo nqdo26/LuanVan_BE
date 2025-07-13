@@ -8,6 +8,7 @@ const {
     getCityDeletionInfoService,
     deleteCityService,
     getCityBySlugService,
+    incrementCityViews,
 } = require('../services/cityService');
 
 const createCity = async (req, res) => {
@@ -188,6 +189,37 @@ const getCityDeletionInfo = async (req, res) => {
     }
 };
 
+const incrementCityViewsController = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const mongoose = require('mongoose');
+
+        // Validate city ID
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                EC: 1,
+                EM: 'ID thành phố không hợp lệ',
+                data: null,
+            });
+        }
+
+        const result = await incrementCityViews(id);
+
+        if (result.EC === 0) {
+            res.status(200).json(result);
+        } else {
+            res.status(404).json(result);
+        }
+    } catch (error) {
+        console.error('Error in incrementCityViewsController:', error);
+        res.status(500).json({
+            EC: 1,
+            EM: 'Lỗi server khi tăng lượt xem',
+            data: null,
+        });
+    }
+};
+
 module.exports = {
     createCity,
     getCities,
@@ -198,4 +230,5 @@ module.exports = {
     updateCity,
     deleteCity,
     getCityDeletionInfo,
+    incrementCityViewsController,
 };

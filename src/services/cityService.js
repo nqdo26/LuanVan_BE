@@ -127,7 +127,8 @@ const getCityBySlugService = async (slug) => {
             };
         }
 
-        await City.findByIdAndUpdate(city._id, { $inc: { views: 1 } });
+        // Removed automatic view increment - now handled by explicit API call
+        // await City.findByIdAndUpdate(city._id, { $inc: { views: 1 } });
 
         return {
             EC: 0,
@@ -425,6 +426,42 @@ const getCitiesWithDestinationCountService = async () => {
     }
 };
 
+const incrementCityViews = async (cityId) => {
+    try {
+        const city = await City.findByIdAndUpdate(
+            cityId,
+            {
+                $inc: { views: 1 },
+            },
+            {
+                new: true,
+                runValidators: false,
+            },
+        );
+
+        if (!city) {
+            return {
+                EC: 1,
+                EM: 'Không tìm thấy thành phố',
+                data: null,
+            };
+        }
+
+        return {
+            EC: 0,
+            EM: 'Tăng lượt xem thành công',
+            data: city.views,
+        };
+    } catch (error) {
+        console.error('Error in incrementCityViews service:', error);
+        return {
+            EC: 1,
+            EM: 'Lỗi khi tăng lượt xem',
+            data: null,
+        };
+    }
+};
+
 module.exports = {
     createCityService,
     getCitiesService,
@@ -435,4 +472,5 @@ module.exports = {
     deleteCityService,
     getCityDeletionInfoService,
     getCitiesWithDestinationCountService,
+    incrementCityViews,
 };
