@@ -25,15 +25,15 @@ const tourSchema = new mongoose.Schema(
                     {
                         type: { type: String, enum: ['destination', 'note'], required: true },
                         destinationId: { type: mongoose.Schema.Types.ObjectId, ref: 'destination' },
-                        title: String, // For notes
-                        content: String, // Note content or destination note
+                        title: String,
+                        content: String,
                         time: String,
-                        iconType: { type: String, enum: ['place', 'restaurant', 'coffee'], default: 'place' }, // Store selected icon type
+                        iconType: { type: String, enum: ['place', 'restaurant', 'coffee'], default: 'place' }, 
                         order: { type: Number, default: 0 },
                         createdAt: { type: Date, default: Date.now },
                     },
                 ],
-                // Keep old structure for backward compatibility
+            
                 descriptions: [
                     {
                         destinationId: { type: mongoose.Schema.Types.ObjectId, ref: 'destination' },
@@ -51,7 +51,7 @@ const tourSchema = new mongoose.Schema(
         ],
     },
     {
-        timestamps: true, // Thêm createdAt và updatedAt
+        timestamps: true, 
     },
 );
 

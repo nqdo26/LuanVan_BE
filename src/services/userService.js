@@ -133,9 +133,63 @@ const getUsersService = async () => {
     }
 };
 
+const getUserByIdService = async (id) => {
+    try {
+        const user = await User.findById(id).select('-password');
+        if (!user) {
+            return {
+                EC: 1,
+                EM: 'User not found',
+            };
+        }
+
+        return {
+            EC: 0,
+            EM: 'Get user success',
+            data: user,
+        };
+    } catch (error) {
+        console.log(error);
+        return {
+            EC: 2,
+            EM: 'An error occurred while getting user',
+        };
+    }
+};
+
+const updateUserService = async (id, updateData) => {
+    try {
+        const currentUser = await User.findById(id);
+        if (!currentUser) {
+            return {
+                EC: 1,
+                EM: 'User not found',
+            };
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(id, updateData, { new: true, runValidators: true }).select(
+            '-password',
+        );
+
+        return {
+            EC: 0,
+            EM: 'Update user success',
+            data: updatedUser,
+        };
+    } catch (error) {
+        console.log(error);
+        return {
+            EC: 2,
+            EM: 'An error occurred while updating user',
+        };
+    }
+};
+
 module.exports = {
     createUserService,
     loginService,
     getUsersService,
     deleteUserService,
+    updateUserService,
+    getUserByIdService,
 };

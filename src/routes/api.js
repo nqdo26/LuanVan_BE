@@ -1,6 +1,6 @@
 const express = require('express');
 const path = require('path');
-const { createUser, handleLogin, getAccount } = require('../controllers/userController');
+const { createUser, handleLogin, getAccount, getUserById } = require('../controllers/userController');
 
 const auth = require('../../middleware/auth');
 const delay = require('../../middleware/delay');
@@ -69,6 +69,7 @@ routerAPI.post('/createAdmin', createAdmin);
 routerAPI.post('/login', handleLogin);
 routerAPI.get('/account', auth, getAccount);
 routerAPI.get('/users', auth, getUsers);
+routerAPI.get('/users/:id', auth, getUserById);
 routerAPI.delete('/users/:id', auth, deleteUser);
 routerAPI.patch('/users/:id/admin', auth, updateUserAdmin);
 
