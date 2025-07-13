@@ -5,7 +5,7 @@ const delay = (req, res, next) => {
         }
 
         next();
-    }, 3000);
+    }, 30000);
 };
 
 module.exports = delay;

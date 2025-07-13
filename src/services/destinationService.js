@@ -286,7 +286,6 @@ const getDestinationsByTags = async (tagIds, cityId = null, limit = 20) => {
             tags: { $in: tagIds },
         };
 
-        // Nếu có cityId thì filter theo city
         if (cityId) {
             filter['location.city'] = cityId;
         }
@@ -385,6 +384,67 @@ const incrementDestinationViews = async (destinationId) => {
     }
 };
 
+const getDestinationsByCity = async (citySlug, options = {}) => {
+    try {
+        const { limit = 20, skip = 0, sort = 'createdAt', order = -1 } = options;
+
+        const City = require('../models/city');
+        const city = await City.findOne({ slug: citySlug }).select('_id name slug');
+
+        if (!city) {
+            return {
+                EC: 1,
+                EM: 'Không tìm thấy thành phố',
+                data: null,
+            };
+        }
+
+        const filter = {
+            'location.city': city._id,
+        };
+
+
+        const sortObj = {};
+        sortObj[sort] = parseInt(order);
+
+        const destinations = await Destination.find(filter)
+            .populate([
+                { path: 'tags', select: 'title slug' },
+                { path: 'location.city', select: 'name slug images' },
+            ])
+            .limit(parseInt(limit))
+            .skip(parseInt(skip))
+            .sort(sortObj);
+
+
+        const total = await Destination.countDocuments(filter);
+
+        return {
+            EC: 0,
+            EM: 'Lấy danh sách địa điểm theo thành phố thành công',
+            data: {
+                city: {
+                    _id: city._id,
+                    name: city.name,
+                    slug: city.slug,
+                },
+                destinations,
+                total,
+                limit: parseInt(limit),
+                skip: parseInt(skip),
+                hasMore: skip + destinations.length < total,
+            },
+        };
+    } catch (error) {
+        console.error('Error in getDestinationsByCity service:', error);
+        return {
+            EC: 1,
+            EM: 'Lỗi khi lấy danh sách địa điểm theo thành phố',
+            data: null,
+        };
+    }
+};
+
 module.exports = {
     createDestination,
     getDestinations,
@@ -395,5 +455,6 @@ module.exports = {
     deleteDestination,
     getPopularDestinations,
     getDestinationsByTags,
+    getDestinationsByCity,
     incrementDestinationViews,
 };

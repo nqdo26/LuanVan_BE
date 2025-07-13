@@ -37,6 +37,7 @@ const {
     deleteDestination,
     getPopularDestinations,
     getDestinationsByTags,
+    getDestinationsByCity,
     incrementDestinationViews,
 } = require('../controllers/destinationController');
 const {
@@ -120,6 +121,7 @@ routerAPI.post(
 routerAPI.get('/destinations/popular', getPopularDestinations);
 routerAPI.get('/destinations/search', searchDestinations);
 routerAPI.get('/destinations/by-tags', getDestinationsByTags);
+routerAPI.get('/destinations/city/:citySlug', getDestinationsByCity);
 routerAPI.patch('/destinations/:id/views', incrementDestinationViews);
 routerAPI.get('/destinations', auth, getDestinations);
 routerAPI.get('/destinations/:id', getDestinationById);

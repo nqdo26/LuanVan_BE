@@ -311,6 +311,42 @@ const incrementDestinationViews = async (req, res) => {
     }
 };
 
+const getDestinationsByCity = async (req, res) => {
+    try {
+        const { citySlug } = req.params;
+        const { limit, skip, sort, order } = req.query;
+
+        // Validate citySlug
+        if (!citySlug || typeof citySlug !== 'string') {
+            return res.status(400).json({
+                EC: 1,
+                EM: 'Slug thành phố không hợp lệ',
+                data: null,
+            });
+        }
+
+        const result = await destinationService.getDestinationsByCity(citySlug, {
+            limit,
+            skip,
+            sort,
+            order,
+        });
+
+        if (result.EC === 0) {
+            res.status(200).json(result);
+        } else {
+            res.status(404).json(result);
+        }
+    } catch (error) {
+        console.error('Error in getDestinationsByCity controller:', error);
+        res.status(500).json({
+            EC: 1,
+            EM: 'Lỗi server khi lấy danh sách địa điểm',
+            data: null,
+        });
+    }
+};
+
 module.exports = {
     createDestination,
     getDestinations,
@@ -322,5 +358,6 @@ module.exports = {
     deleteDestination,
     getPopularDestinations,
     getDestinationsByTags,
+    getDestinationsByCity,
     incrementDestinationViews,
 };
