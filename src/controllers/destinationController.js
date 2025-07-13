@@ -60,6 +60,7 @@ const getDestinationById = async (req, res) => {
 
         const response = {
             title: destination.title,
+            slug: destination.slug,
             type: destination.type,
             tags: destination.tags,
             location: {

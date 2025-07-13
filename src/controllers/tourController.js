@@ -6,9 +6,12 @@ const {
     updateTourService,
     deleteTourService,
     getPublicToursService,
+    addDestinationToTourService,
+    addNoteToTourService,
+    updateDestinationInTourService,
+    removeDestinationFromTourService,
 } = require('../services/tourService');
 
-// Tạo tour mới
 const createTour = async (req, res) => {
     try {
         const result = await createTourService(req.body);
@@ -28,7 +31,6 @@ const createTour = async (req, res) => {
     }
 };
 
-// Lấy danh sách tour
 const getTours = async (req, res) => {
     try {
         const { page = 1, limit = 10, search = '', cityId = '' } = req.query;
@@ -50,7 +52,6 @@ const getTours = async (req, res) => {
     }
 };
 
-// Lấy tour theo slug
 const getTourBySlug = async (req, res) => {
     try {
         const { slug } = req.params;
@@ -72,7 +73,6 @@ const getTourBySlug = async (req, res) => {
     }
 };
 
-// Lấy tour theo ID
 const getTourById = async (req, res) => {
     try {
         const { id } = req.params;
@@ -94,7 +94,6 @@ const getTourById = async (req, res) => {
     }
 };
 
-// Cập nhật tour
 const updateTour = async (req, res) => {
     try {
         const { id } = req.params;
@@ -116,7 +115,6 @@ const updateTour = async (req, res) => {
     }
 };
 
-// Xóa tour
 const deleteTour = async (req, res) => {
     try {
         const { id } = req.params;
@@ -138,7 +136,6 @@ const deleteTour = async (req, res) => {
     }
 };
 
-// Lấy tour công khai (không cần auth)
 const getPublicTours = async (req, res) => {
     try {
         const { page = 1, limit = 10, cityId = '' } = req.query;
@@ -160,6 +157,151 @@ const getPublicTours = async (req, res) => {
     }
 };
 
+const addDestinationToTour = async (req, res) => {
+    try {
+        const { tourId } = req.params;
+        const { dayId, destinationId, note, time } = req.body;
+
+        if (!dayId || !destinationId) {
+            return res.status(400).json({
+                EC: 1,
+                EM: 'Thiếu thông tin ngày hoặc địa điểm',
+                DT: null,
+            });
+        }
+
+        const result = await addDestinationToTourService(tourId, dayId, {
+            destinationId,
+            note,
+            time,
+        });
+
+        return res.status(result.EC === 0 ? 200 : 400).json({
+            EC: result.EC,
+            EM: result.EM,
+            DT: result.DT,
+        });
+    } catch (error) {
+        console.log('Error in addDestinationToTour controller:', error);
+        return res.status(500).json({
+            EC: 1,
+            EM: 'Lỗi server',
+            DT: null,
+        });
+    }
+};
+
+const addNoteToTour = async (req, res) => {
+    try {
+        const { tourId } = req.params;
+        const { dayId, title, content } = req.body;
+
+        if (!dayId) {
+            return res.status(400).json({
+                EC: 1,
+                EM: 'Thiếu thông tin ngày',
+                DT: null,
+            });
+        }
+
+        const result = await addNoteToTourService(tourId, dayId, {
+            title: title || 'Ghi chú',
+            content: content || '',
+        });
+
+        return res.status(result.EC === 0 ? 200 : 400).json({
+            EC: result.EC,
+            EM: result.EM,
+            DT: result.DT,
+        });
+    } catch (error) {
+        console.log('Error in addNoteToTour controller:', error);
+        return res.status(500).json({
+            EC: 1,
+            EM: 'Lỗi server',
+            DT: null,
+        });
+    }
+};
+
+const updateDestinationInTour = async (req, res) => {
+    try {
+        const { tourId } = req.params;
+        const { dayId, descriptionIndex, note, time, destinationId, itemId } = req.body;
+
+        if (!dayId || descriptionIndex === undefined) {
+            return res.status(400).json({
+                EC: 1,
+                EM: 'Thiếu thông tin ngày hoặc index địa điểm',
+                DT: null,
+            });
+        }
+
+        const result = await updateDestinationInTourService(tourId, {
+            dayId,
+            descriptionIndex,
+            note,
+            time,
+            destinationId,
+            itemId,
+        });
+
+        return res.status(result.EC === 0 ? 200 : 400).json({
+            EC: result.EC,
+            EM: result.EM,
+            DT: result.DT,
+        });
+    } catch (error) {
+        return res.status(500).json({
+            EC: 1,
+            EM: 'Lỗi server',
+            DT: null,
+        });
+    }
+};
+
+const removeDestinationFromTour = async (req, res) => {
+    try {
+        const { tourId } = req.params;
+        const { dayId, itemId, destinationId } = req.body;
+
+        if (!dayId) {
+            return res.status(400).json({
+                EC: 1,
+                EM: 'Thiếu thông tin ngày',
+                DT: null,
+            });
+        }
+
+        if (!itemId && !destinationId) {
+            return res.status(400).json({
+                EC: 1,
+                EM: 'Thiếu thông tin địa điểm cần xóa',
+                DT: null,
+            });
+        }
+
+        const result = await removeDestinationFromTourService(tourId, {
+            dayId,
+            itemId,
+            destinationId,
+        });
+
+        return res.status(result.EC === 0 ? 200 : 400).json({
+            EC: result.EC,
+            EM: result.EM,
+            DT: result.DT,
+        });
+    } catch (error) {
+        console.log('Error in removeDestinationFromTour controller:', error);
+        return res.status(500).json({
+            EC: 1,
+            EM: 'Lỗi server',
+            DT: null,
+        });
+    }
+};
+
 module.exports = {
     createTour,
     getTours,
@@ -168,4 +310,8 @@ module.exports = {
     updateTour,
     deleteTour,
     getPublicTours,
+    addDestinationToTour,
+    addNoteToTour,
+    updateDestinationInTour,
+    removeDestinationFromTour,
 };
