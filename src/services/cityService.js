@@ -1,4 +1,5 @@
 const City = require('../models/city');
+const slugify = require('slugify');
 
 const createCityService = async (data, imageFiles, userId) => {
     try {
@@ -211,6 +212,26 @@ const getCityByIdAndUpdateService = async (id, data = null, imageFiles = [], use
             info: infoData || existingCity.info,
         };
 
+        // Update slug if title/name is changed
+        if (data.title && data.title !== existingCity.name) {
+            const newSlug = slugify(data.title, { lower: true });
+
+            // Check if slug already exists (except for current city)
+            const existingSlugCity = await City.findOne({
+                slug: newSlug,
+                _id: { $ne: id },
+            });
+
+            if (existingSlugCity) {
+                return {
+                    EC: 1,
+                    EM: 'Tên thành phố đã tồn tại. Vui lòng chọn tên khác.',
+                };
+            }
+
+            updateData.slug = newSlug;
+        }
+
         let finalImages = existingCity.images || [];
 
         if (data.existing_images && Array.isArray(data.existing_images)) {
@@ -295,6 +316,26 @@ const updateCityService = async (id, data, imageFiles, userId) => {
             weather: weatherData || existingCity.weather,
             info: infoData || existingCity.info,
         };
+
+        // Update slug if title/name is changed
+        if (data.title && data.title !== existingCity.name) {
+            const newSlug = slugify(data.title, { lower: true });
+
+            // Check if slug already exists (except for current city)
+            const existingSlugCity = await City.findOne({
+                slug: newSlug,
+                _id: { $ne: id },
+            });
+
+            if (existingSlugCity) {
+                return {
+                    EC: 1,
+                    EM: 'Tên thành phố đã tồn tại. Vui lòng chọn tên khác.',
+                };
+            }
+
+            updateData.slug = newSlug;
+        }
 
         let finalImages = existingCity.images || [];
 

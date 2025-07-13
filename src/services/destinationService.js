@@ -233,6 +233,23 @@ const updateDestination = async (id, data, files) => {
         }
     }
 
+    // Update slug if title is changed
+    if (data.title && data.title !== currentDestination.title) {
+        const newSlug = slugify(data.title, { lower: true });
+
+        // Check if slug already exists (except for current destination)
+        const existingSlugDestination = await Destination.findOne({
+            slug: newSlug,
+            _id: { $ne: id },
+        });
+
+        if (existingSlugDestination) {
+            throw new Error('Tên địa điểm đã tồn tại. Vui lòng chọn tên khác.');
+        }
+
+        updateData.slug = newSlug;
+    }
+
     const {
         createdBy,
         openHour,
@@ -317,7 +334,6 @@ const searchDestinations = async (query, options = {}) => {
     try {
         const { limit = 10, skip = 0 } = options;
 
-        // Create search filter
         const searchFilter = {
             $or: [
                 { title: { $regex: query, $options: 'i' } },
@@ -403,7 +419,6 @@ const getDestinationsByCity = async (citySlug, options = {}) => {
             'location.city': city._id,
         };
 
-
         const sortObj = {};
         sortObj[sort] = parseInt(order);
 
@@ -415,7 +430,6 @@ const getDestinationsByCity = async (citySlug, options = {}) => {
             .limit(parseInt(limit))
             .skip(parseInt(skip))
             .sort(sortObj);
-
 
         const total = await Destination.countDocuments(filter);
 

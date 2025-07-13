@@ -157,8 +157,25 @@ const getTourByIdService = async (id) => {
 
 const updateTourService = async (id, updateData) => {
     try {
+        // Update slug if name is changed
         if (updateData.name) {
-            updateData.slug = slugify(updateData.name, { lower: true, strict: true });
+            const newSlug = slugify(updateData.name, { lower: true, strict: true });
+
+            // Check if slug already exists (except for current tour)
+            const existingSlugTour = await Tour.findOne({
+                slug: newSlug,
+                _id: { $ne: id },
+            });
+
+            if (existingSlugTour) {
+                return {
+                    EC: 1,
+                    EM: 'Tên tour đã tồn tại. Vui lòng chọn tên khác.',
+                    DT: null,
+                };
+            }
+
+            updateData.slug = newSlug;
         }
 
         const tour = await Tour.findByIdAndUpdate(id, updateData, { new: true, runValidators: true }).populate([
