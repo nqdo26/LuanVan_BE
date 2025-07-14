@@ -459,6 +459,48 @@ const getDestinationsByCity = async (citySlug, options = {}) => {
     }
 };
 
+const filterDestinations = async ({ cityId, tagIds = [], limit = 20, skip = 0 }) => {
+    try {
+        const filter = {};
+        if (cityId) {
+            filter['location.city'] = cityId;
+        }
+        if (tagIds.length > 0) {
+            filter['tags'] = { $in: tagIds };
+        }
+        console.log('[filterDestinationsService] filter:', filter, 'limit:', limit, 'skip:', skip);
+
+        const destinations = await Destination.find(filter)
+            .populate('tags', 'title slug')
+            .populate('location.city', 'name slug images')
+            .limit(parseInt(limit))
+            .skip(parseInt(skip))
+            .sort({ createdAt: -1 });
+
+        const total = await Destination.countDocuments(filter);
+        console.log('[filterDestinationsService] found:', destinations.length, 'total:', total);
+
+        return {
+            EC: 0,
+            EM: 'Lọc địa điểm thành công',
+            data: {
+                destinations,
+                total,
+                limit: parseInt(limit),
+                skip: parseInt(skip),
+                hasMore: skip + destinations.length < total,
+            },
+        };
+    } catch (error) {
+        console.error('[filterDestinationsService] Error:', error);
+        return {
+            EC: 1,
+            EM: 'Lỗi khi lọc địa điểm',
+            data: null,
+        };
+    }
+};
+
 module.exports = {
     createDestination,
     getDestinations,
@@ -471,4 +513,5 @@ module.exports = {
     getDestinationsByTags,
     getDestinationsByCity,
     incrementDestinationViews,
+    filterDestinations,
 };

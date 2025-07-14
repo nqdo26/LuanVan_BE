@@ -54,6 +54,7 @@ const {
     getDestinationsByTags,
     getDestinationsByCity,
     incrementDestinationViews,
+    filterDestinations,
 } = require('../controllers/destinationController');
 const {
     createTour,
@@ -152,6 +153,7 @@ routerAPI.get('/destinations/by-tags', getDestinationsByTags);
 routerAPI.get('/destinations/city/:citySlug', getDestinationsByCity);
 routerAPI.patch('/destinations/:id/views', incrementDestinationViews);
 routerAPI.get('/destinations', auth, getDestinations);
+routerAPI.get('/destinations/filter', filterDestinations);
 routerAPI.get('/destinations/:id', getDestinationById);
 routerAPI.get('/destination/:slug', getDestinationBySlug);
 
