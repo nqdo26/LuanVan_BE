@@ -1,6 +1,21 @@
 const express = require('express');
 const path = require('path');
-const { createUser, handleLogin, getAccount, getUserById } = require('../controllers/userController');
+const {
+    createUser,
+    handleLogin,
+    getAccount,
+    getUserById,
+    addToFavorites,
+    removeFromFavorites,
+    getUserFavorites,
+} = require('../controllers/userController');
+
+const {
+    createComment,
+    getCommentsByDestination,
+    deleteComment,
+    getCommentById,
+} = require('../controllers/commentController');
 
 const auth = require('../../middleware/auth');
 const delay = require('../../middleware/delay');
@@ -48,6 +63,7 @@ const {
     getTourBySlug,
     getTourById,
     getPublicTours,
+    getUserTours,
     addDestinationToTour,
     addNoteToTour,
     updateDestinationInTour,
@@ -72,6 +88,17 @@ routerAPI.get('/users', auth, getUsers);
 routerAPI.get('/users/:id', auth, getUserById);
 routerAPI.delete('/users/:id', auth, deleteUser);
 routerAPI.patch('/users/:id/admin', auth, updateUserAdmin);
+
+// Favorites management
+routerAPI.post('/favorites', auth, addToFavorites);
+routerAPI.delete('/favorites/:destinationId', auth, removeFromFavorites);
+routerAPI.get('/favorites', auth, getUserFavorites);
+
+// Comments management
+routerAPI.post('/comments', auth, uploadByFolder('CommentImages').array('images', 5), createComment);
+routerAPI.get('/comments/destination/:destinationId', getCommentsByDestination);
+routerAPI.get('/comments/:commentId', getCommentById);
+routerAPI.delete('/comments/:commentId', auth, deleteComment);
 
 //Tag management
 routerAPI.post('/tag', auth, createTag);
@@ -146,6 +173,7 @@ routerAPI.delete('/destinations/:id', auth, deleteDestination);
 // Tour management
 routerAPI.post('/tours', auth, createTour);
 routerAPI.get('/tours', auth, getTours);
+routerAPI.get('/tours/user', auth, getUserTours);
 routerAPI.get('/tours/public', getPublicTours);
 routerAPI.get('/tours/:id', auth, getTourById);
 routerAPI.get('/tours/slug/:slug', getTourBySlug);

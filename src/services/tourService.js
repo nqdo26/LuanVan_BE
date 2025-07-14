@@ -7,6 +7,22 @@ const createTourService = async (tourData) => {
             tourData.slug = slugify(tourData.name, { lower: true, strict: true });
         }
 
+        // Kiểm tra slug đã tồn tại trong tours của user này chưa
+        if (tourData.userId && tourData.slug) {
+            const existingTour = await Tour.findOne({
+                slug: tourData.slug,
+                userId: tourData.userId,
+            });
+
+            if (existingTour) {
+                return {
+                    EC: 1,
+                    EM: 'Bạn đã có tour với tên này rồi',
+                    DT: null,
+                };
+            }
+        }
+
         const tour = new Tour(tourData);
         await tour.save();
 
@@ -25,7 +41,7 @@ const createTourService = async (tourData) => {
         if (error.code === 11000) {
             return {
                 EC: 1,
-                EM: 'Tên tour đã tồn tại',
+                EM: 'Bạn đã có tour với tên này rồi',
                 DT: null,
             };
         }
@@ -121,6 +137,7 @@ const getTourByIdService = async (id) => {
         const tour = await Tour.findById(id).populate([
             { path: 'city', select: 'name slug images description' },
             { path: 'tags', select: 'title slug' },
+            { path: 'userId', select: 'email username fullname' },
             { path: 'itinerary.descriptions.destinationId', select: 'name slug images description address rating' },
             {
                 path: 'itinerary.items.destinationId',
@@ -161,16 +178,27 @@ const updateTourService = async (id, updateData) => {
         if (updateData.name) {
             const newSlug = slugify(updateData.name, { lower: true, strict: true });
 
-            // Check if slug already exists (except for current tour)
+            // Get current tour to check userId
+            const currentTour = await Tour.findById(id);
+            if (!currentTour) {
+                return {
+                    EC: 1,
+                    EM: 'Không tìm thấy tour',
+                    DT: null,
+                };
+            }
+
+            // Check if slug already exists for this user (except for current tour)
             const existingSlugTour = await Tour.findOne({
                 slug: newSlug,
+                userId: currentTour.userId,
                 _id: { $ne: id },
             });
 
             if (existingSlugTour) {
                 return {
                     EC: 1,
-                    EM: 'Tên tour đã tồn tại. Vui lòng chọn tên khác.',
+                    EM: 'Bạn đã có tour với tên này rồi. Vui lòng chọn tên khác.',
                     DT: null,
                 };
             }
@@ -202,7 +230,7 @@ const updateTourService = async (id, updateData) => {
         if (error.code === 11000) {
             return {
                 EC: 1,
-                EM: 'Tên tour đã tồn tại',
+                EM: 'Bạn đã có tour với tên này rồi',
                 DT: null,
             };
         }
@@ -674,7 +702,6 @@ const removeNoteFromTourService = async (tourId, removeData) => {
             }
         }
 
-        // Xóa từ notes array (structure cũ)
         if (dayData.notes && noteIndex >= 0 && noteIndex < dayData.notes.length) {
             dayData.notes.splice(noteIndex, 1);
             console.log('Removed item from notes array');
@@ -706,6 +733,46 @@ const removeNoteFromTourService = async (tourId, removeData) => {
         return {
             EC: 1,
             EM: 'Lỗi khi xóa ghi chú',
+            DT: null,
+        };
+    }
+};
+
+const getToursByUserIdService = async (userId, page = 1, limit = 10) => {
+    try {
+        const skip = (page - 1) * limit;
+
+        const tours = await Tour.find({ userId })
+            .populate([
+                { path: 'city', select: 'name slug images' },
+                { path: 'tags', select: 'title slug' },
+                { path: 'itinerary.descriptions.destinationId', select: 'name slug images' },
+            ])
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(parseInt(limit));
+
+        const total = await Tour.countDocuments({ userId });
+        const totalPages = Math.ceil(total / limit);
+
+        return {
+            EC: 0,
+            EM: 'Lấy danh sách tour của người dùng thành công',
+            DT: {
+                tours,
+                pagination: {
+                    currentPage: parseInt(page),
+                    totalPages,
+                    totalItems: total,
+                    limit: parseInt(limit),
+                },
+            },
+        };
+    } catch (error) {
+        console.log('Error in getToursByUserIdService:', error);
+        return {
+            EC: 1,
+            EM: 'Lỗi lấy danh sách tour của người dùng',
             DT: null,
         };
     }
@@ -752,4 +819,5 @@ module.exports = {
     updateDestinationInTourService,
     removeDestinationFromTourService,
     removeNoteFromTourService,
+    getToursByUserIdService,
 };

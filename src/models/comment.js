@@ -4,12 +4,12 @@ const commentSchema = new mongoose.Schema({
     destinationId: { type: mongoose.Schema.Types.ObjectId, ref: 'destination' },
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'user' },
     detail: {
-        landscape: Number,
-        service: Number,
-        price: Number,
-        cleanliness: Number,
-        convenience: Number,
-        activities: Number,
+        criteria1: Number, 
+        criteria2: Number, 
+        criteria3: Number, 
+        criteria4: Number, 
+        criteria5: Number, 
+        criteria6: Number, 
     },
     createdAt: { type: Date, default: Date.now },
     title: String,
@@ -17,7 +17,6 @@ const commentSchema = new mongoose.Schema({
     visitDate: Date,
     images: [String],
     likeCount: { type: Number, default: 0 },
-    reportCount: { type: Number, default: 0 },
 });
 
 const Comment = mongoose.model('comment', commentSchema);

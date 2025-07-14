@@ -6,6 +6,7 @@ const {
     updateTourService,
     deleteTourService,
     getPublicToursService,
+    getToursByUserIdService,
     addDestinationToTourService,
     addNoteToTourService,
     updateDestinationInTourService,
@@ -15,7 +16,13 @@ const {
 
 const createTour = async (req, res) => {
     try {
-        const result = await createTourService(req.body);
+        // Thêm userId từ token vào dữ liệu tour
+        const tourData = {
+            ...req.body,
+            userId: req.user.id,
+        };
+
+        const result = await createTourService(tourData);
 
         return res.status(result.EC === 0 ? 201 : 400).json({
             EC: result.EC,
@@ -344,6 +351,28 @@ const removeNoteFromTour = async (req, res) => {
     }
 };
 
+const getUserTours = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { page = 1, limit = 10 } = req.query;
+
+        const result = await getToursByUserIdService(userId, page, limit);
+
+        return res.status(200).json({
+            EC: result.EC,
+            EM: result.EM,
+            DT: result.DT,
+        });
+    } catch (error) {
+        console.log('Error in getUserTours controller:', error);
+        return res.status(500).json({
+            EC: 1,
+            EM: 'Lỗi server',
+            DT: null,
+        });
+    }
+};
+
 module.exports = {
     createTour,
     getTours,
@@ -357,4 +386,5 @@ module.exports = {
     updateDestinationInTour,
     removeDestinationFromTour,
     removeNoteFromTour,
+    getUserTours,
 };

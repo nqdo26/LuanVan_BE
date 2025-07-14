@@ -135,7 +135,27 @@ const getUsersService = async () => {
 
 const getUserByIdService = async (id) => {
     try {
-        const user = await User.findById(id).select('-password');
+        const user = await User.findById(id)
+            .select('-password')
+            .populate([
+                {
+                    path: 'favortites',
+                    select: 'title slug album location tags type statistics',
+                    populate: {
+                        path: 'tags',
+                        select: 'title slug',
+                    },
+                },
+                {
+                    path: 'tours',
+                    select: 'name slug description totalDays budget isPublic createdAt',
+                    populate: [
+                        { path: 'city', select: 'name slug' },
+                        { path: 'tags', select: 'title slug' },
+                    ],
+                },
+            ]);
+
         if (!user) {
             return {
                 EC: 1,
@@ -185,6 +205,115 @@ const updateUserService = async (id, updateData) => {
     }
 };
 
+const addToFavoritesService = async (userId, destinationId) => {
+    try {
+        const user = await User.findById(userId);
+        if (!user) {
+            return {
+                EC: 1,
+                EM: 'User not found',
+            };
+        }
+
+        // Check if destination is already in favorites
+        if (user.favortites.includes(destinationId)) {
+            return {
+                EC: 1,
+                EM: 'Destination already in favorites',
+            };
+        }
+
+        user.favortites.push(destinationId);
+        await user.save();
+
+        return {
+            EC: 0,
+            EM: 'Added to favorites successfully',
+            data: user.favortites,
+        };
+    } catch (error) {
+        console.log(error);
+        return {
+            EC: 2,
+            EM: 'An error occurred while adding to favorites',
+        };
+    }
+};
+
+const removeFromFavoritesService = async (userId, destinationId) => {
+    try {
+        const user = await User.findById(userId);
+        if (!user) {
+            return {
+                EC: 1,
+                EM: 'User not found',
+            };
+        }
+
+        // Check if destination is in favorites
+        const favoriteIndex = user.favortites.indexOf(destinationId);
+        if (favoriteIndex === -1) {
+            return {
+                EC: 1,
+                EM: 'Destination not found in favorites',
+            };
+        }
+
+        user.favortites.splice(favoriteIndex, 1);
+        await user.save();
+
+        return {
+            EC: 0,
+            EM: 'Removed from favorites successfully',
+            data: user.favortites,
+        };
+    } catch (error) {
+        console.log(error);
+        return {
+            EC: 2,
+            EM: 'An error occurred while removing from favorites',
+        };
+    }
+};
+
+const getUserFavoritesService = async (userId) => {
+    try {
+        const user = await User.findById(userId).populate({
+            path: 'favortites',
+            select: 'title slug album location tags type openHour statistics comments',
+            populate: [
+                {
+                    path: 'location.city',
+                    select: 'name slug',
+                },
+                {
+                    path: 'tags',
+                    select: 'title slug',
+                },
+            ],
+        });
+
+        if (!user) {
+            return {
+                EC: 1,
+                EM: 'User not found',
+            };
+        }
+
+        return {
+            EC: 0,
+            EM: 'Get user favorites success',
+            data: user.favortites || [],
+        };
+    } catch (error) {
+        console.log(error);
+        return {
+            EC: 2,
+            EM: 'An error occurred while getting user favorites',
+        };
+    }
+};
+
 module.exports = {
     createUserService,
     loginService,
@@ -192,4 +321,7 @@ module.exports = {
     deleteUserService,
     updateUserService,
     getUserByIdService,
+    addToFavoritesService,
+    removeFromFavoritesService,
+    getUserFavoritesService,
 };
