@@ -158,9 +158,9 @@ routerAPI.post(
 routerAPI.get('/destinations/popular', getPopularDestinations);
 routerAPI.get('/destinations/search', searchDestinations);
 routerAPI.get('/destinations/by-tags', getDestinationsByTags);
-routerAPI.get('/destinations/city/:citySlug', getDestinationsByCity);
+routerAPI.get('/destinations/city/:citySlug', getDestinationsByCity);   
 routerAPI.patch('/destinations/:id/views', incrementDestinationViews);
-routerAPI.get('/destinations', auth, getDestinations);
+routerAPI.get('/destinations', getDestinations);
 routerAPI.get('/destinations/filter', filterDestinations);
 routerAPI.get('/destinations/:id', getDestinationById);
 routerAPI.get('/destination/:slug', getDestinationBySlug);
