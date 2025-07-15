@@ -8,6 +8,9 @@ const {
     addToFavorites,
     removeFromFavorites,
     getUserFavorites,
+    updateUserName,
+    updateUserPassword,
+    updateUserAvatar,
 } = require('../controllers/userController');
 
 const {
@@ -118,6 +121,11 @@ routerAPI.post('/destinationType', auth, createDestinationType);
 routerAPI.get('/destinationTypes', auth, getDestinationTypes);
 routerAPI.put('/destinationTypes/:id', auth, updateDestinationType);
 routerAPI.delete('/destinationTypes/:id', auth, deleteDestinationType);
+
+// User update APIs
+routerAPI.patch('/users/update-name', auth, updateUserName);
+routerAPI.patch('/users/update-password', auth, updateUserPassword);
+routerAPI.patch('/users/update-avatar', auth, uploadByFolder('AvartarImages').single('avatar'), updateUserAvatar);
 
 // City routes
 routerAPI.post('/city', auth, uploadByFolder('cityImages').array('images', 4), createCity);

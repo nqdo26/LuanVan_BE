@@ -40,7 +40,6 @@ const createUserService = async (email, password, fullName, avatar) => {
             data: result,
         };
     } catch (error) {
-        console.log(error);
         return {
             EC: 2,
             EM: 'An error occurred while creating user',
@@ -62,7 +61,6 @@ const deleteUserService = async (id) => {
             EM: 'Delete success',
         };
     } catch (error) {
-        console.log(error);
         return {
             EC: 2,
             EM: 'An error occurred',
@@ -118,7 +116,6 @@ const loginService = async (email, password) => {
             };
         }
     } catch (error) {
-        console.log(error);
         return null;
     }
 };
@@ -128,7 +125,6 @@ const getUsersService = async () => {
         let result = await User.find({}).select('-password');
         return result;
     } catch (error) {
-        console.log(error);
         return null;
     }
 };
@@ -169,7 +165,6 @@ const getUserByIdService = async (id) => {
             data: user,
         };
     } catch (error) {
-        console.log(error);
         return {
             EC: 2,
             EM: 'An error occurred while getting user',
@@ -186,18 +181,25 @@ const updateUserService = async (id, updateData) => {
                 EM: 'User not found',
             };
         }
-
+        // Check duplicate fullName
+        if (updateData.fullName) {
+            const existed = await User.findOne({ fullName: updateData.fullName, _id: { $ne: id } });
+            if (existed) {
+                return {
+                    EC: 1,
+                    EM: 'Tên này đã được người dùng khác sử dụng. Vui lòng chọn tên khác.',
+                };
+            }
+        }
         const updatedUser = await User.findByIdAndUpdate(id, updateData, { new: true, runValidators: true }).select(
             '-password',
         );
-
         return {
             EC: 0,
             EM: 'Update user success',
             data: updatedUser,
         };
     } catch (error) {
-        console.log(error);
         return {
             EC: 2,
             EM: 'An error occurred while updating user',
@@ -232,7 +234,6 @@ const addToFavoritesService = async (userId, destinationId) => {
             data: user.favortites,
         };
     } catch (error) {
-        console.log(error);
         return {
             EC: 2,
             EM: 'An error occurred while adding to favorites',
@@ -268,7 +269,6 @@ const removeFromFavoritesService = async (userId, destinationId) => {
             data: user.favortites,
         };
     } catch (error) {
-        console.log(error);
         return {
             EC: 2,
             EM: 'An error occurred while removing from favorites',
@@ -306,7 +306,6 @@ const getUserFavoritesService = async (userId) => {
             data: user.favortites || [],
         };
     } catch (error) {
-        console.log(error);
         return {
             EC: 2,
             EM: 'An error occurred while getting user favorites',
