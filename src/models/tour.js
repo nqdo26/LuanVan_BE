@@ -14,7 +14,6 @@ const tourSchema = new mongoose.Schema(
             endDay: Date,
             numDays: Number,
         },
-
         isPublic: {
             type: Boolean,
             default: false,

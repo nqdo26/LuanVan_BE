@@ -22,7 +22,7 @@ const {
 
 const auth = require('../../middleware/auth');
 const delay = require('../../middleware/delay');
-const { createAdmin, getUsers, deleteUser, updateUserAdmin } = require('../controllers/adminController');
+const { createAdmin, getUsers, deleteUser, updateUserAdmin, getStatistics } = require('../controllers/adminController');
 const { createTag, updateTag, deleteTag, getTags } = require('../controllers/tagController');
 const { createCityType, getCityTypes, updateCityType, deleteCityType } = require('../controllers/cityTypeController');
 const {
@@ -129,7 +129,7 @@ routerAPI.patch('/users/update-avatar', auth, uploadByFolder('AvartarImages').si
 
 // City routes
 routerAPI.post('/city', auth, uploadByFolder('cityImages').array('images', 4), createCity);
-routerAPI.get('/cities', auth, getCities);
+routerAPI.get('/cities',  getCities);
 routerAPI.get('/cities-with-count', auth, getCitiesWithDestinationCount);
 routerAPI.get('/cities/:id', getCityById);
 routerAPI.get('/city/:slug', getCityBySlug);
@@ -139,7 +139,7 @@ routerAPI
     .put(auth, uploadByFolder('cityImages').array('images', 4), getCityByIdAndUpdate);
 routerAPI.put('/cities/:id', auth, uploadByFolder('cityImages').array('images', 4), updateCity);
 routerAPI.patch('/cities/:id/views', incrementCityViewsController);
-routerAPI.get('/cities/:id/deletion-info', auth, getCityDeletionInfo);
+routerAPI.get('/cities/:id/deletion-info',  getCityDeletionInfo);
 routerAPI.delete('/cities/:id', auth, deleteCity);
 
 // Destination routes
@@ -196,5 +196,8 @@ routerAPI.post('/tours/:tourId/notes', auth, addNoteToTour);
 routerAPI.put('/tours/:tourId/destinations', auth, updateDestinationInTour);
 routerAPI.delete('/tours/:tourId/destinations', auth, removeDestinationFromTour);
 routerAPI.delete('/tours/:tourId/notes', auth, removeNoteFromTour);
+
+// Admin statistics
+routerAPI.get('/admin/statistics', auth, getStatistics);
 
 module.exports = routerAPI;
