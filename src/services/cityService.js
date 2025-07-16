@@ -1,4 +1,5 @@
 const City = require('../models/city');
+const CityType = require('../models/cityType');
 const slugify = require('slugify');
 
 const createCityService = async (data, imageFiles, userId) => {
@@ -127,9 +128,6 @@ const getCityBySlugService = async (slug) => {
                 EM: 'Thành phố không tồn tại.',
             };
         }
-
-        // Removed automatic view increment - now handled by explicit API call
-        // await City.findByIdAndUpdate(city._id, { $inc: { views: 1 } });
 
         return {
             EC: 0,
@@ -503,6 +501,42 @@ const incrementCityViews = async (cityId) => {
     }
 };
 
+const getCityByTypeService = async (typeName) => {
+    try {
+        let type = await CityType.findOne({ title: typeName });
+        if (!type) {
+            const slugify = require('slugify');
+            const typeSlug = slugify(typeName, { lower: true });
+
+            const allTypes = await CityType.find({});
+            type = allTypes.find((t) => slugify(t.title, { lower: true }) === typeSlug);
+        }
+        if (!type) {
+            console.error('City type not found:', typeName);
+            return {
+                EC: 1,
+                EM: 'Không tìm thấy loại thành phố',
+                data: [],
+            };
+        }
+
+        const cities = await City.find({ type: type._id })
+            .populate('type', 'title')
+            .populate('createdBy', 'fullName email');
+        return {
+            EC: 0,
+            EM: 'Lấy thành phố theo loại thành công',
+            data: cities,
+        };
+    } catch (error) {
+        return {
+            EC: 99,
+            EM: 'Lỗi server khi lấy thành phố theo loại',
+            data: [],
+        };
+    }
+};
+
 module.exports = {
     createCityService,
     getCitiesService,
@@ -514,4 +548,5 @@ module.exports = {
     getCityDeletionInfoService,
     getCitiesWithDestinationCountService,
     incrementCityViews,
+    getCityByTypeService,
 };

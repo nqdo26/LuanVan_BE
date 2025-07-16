@@ -43,6 +43,7 @@ const {
     getCityDeletionInfo,
     deleteCity,
     incrementCityViewsController,
+    getCityByType,
 } = require('../controllers/cityController');
 const {
     createDestination,
@@ -115,6 +116,8 @@ routerAPI.post('/cityType', auth, createCityType);
 routerAPI.get('/cityTypes', auth, getCityTypes);
 routerAPI.put('/cityTypes/:id', auth, updateCityType);
 routerAPI.delete('/cityTypes/:id', auth, deleteCityType);
+routerAPI.get('/cities/type/:type', getCityByType);
+
 
 //Destination Type management
 routerAPI.post('/destinationType', auth, createDestinationType);

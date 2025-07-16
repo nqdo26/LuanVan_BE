@@ -9,7 +9,24 @@ const {
     deleteCityService,
     getCityBySlugService,
     incrementCityViews,
+    getCityByTypeService,
 } = require('../services/cityService');
+
+const getCityByType = async (req, res) => {
+    try {
+        const typeSlug = req.params.type;
+
+        let typeName = typeSlug;
+        if (typeSlug === 'bien') typeName = 'Biển';
+        if (typeSlug === 'nui') typeName = 'Núi';
+        if (typeSlug === 'van-hoa') typeName = 'Văn hóa';
+
+        const cities = await getCityByTypeService(typeName);
+        res.status(200).json({ EC: 0, data: cities });
+    } catch (err) {
+        res.status(500).json({ EC: 1, EM: err.message });
+    }
+};
 
 const createCity = async (req, res) => {
     try {
@@ -231,4 +248,5 @@ module.exports = {
     deleteCity,
     getCityDeletionInfo,
     incrementCityViewsController,
+    getCityByType,
 };
