@@ -74,6 +74,7 @@ const {
     updateDestinationInTour,
     removeDestinationFromTour,
     removeNoteFromTour,
+    updateNoteInTour,
 } = require('../controllers/tourController');
 
 const routerAPI = express.Router();
@@ -192,6 +193,7 @@ routerAPI.get('/tours/:id', auth, getTourById);
 routerAPI.get('/tours/slug/:slug', getTourBySlug);
 routerAPI.put('/tours/:id', auth, updateTour);
 routerAPI.delete('/tours/:id', auth, deleteTour);
+routerAPI.put('/tours/:tourId/notes', auth, updateNoteInTour);
 
 // Tour itinerary management
 routerAPI.post('/tours/:tourId/destinations', auth, addDestinationToTour);

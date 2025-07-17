@@ -394,13 +394,7 @@ const addDestinationToTourService = async (tourId, dayId, destinationData) => {
         };
     } catch (error) {
         console.log('Error in addDestinationToTourService:', error);
-        console.log('Error details:', {
-            message: error.message,
-            stack: error.stack,
-            tourId,
-            dayId,
-            destinationData,
-        });
+
         return {
             EC: 1,
             EM: 'Lỗi khi thêm địa điểm',
@@ -573,12 +567,7 @@ const updateDestinationInTourService = async (tourId, updateData) => {
         };
     } catch (error) {
         console.log('Error in updateDestinationInTourService:', error);
-        console.log('Error details:', {
-            message: error.message,
-            stack: error.stack,
-            tourId,
-            updateData,
-        });
+
         return {
             EC: 1,
             EM: 'Lỗi khi cập nhật địa điểm',
@@ -657,7 +646,6 @@ const removeDestinationFromTourService = async (tourId, removeData) => {
 const removeNoteFromTourService = async (tourId, removeData) => {
     try {
         const { dayId, noteIndex } = removeData;
-        console.log('removeNoteFromTourService called with:', { tourId, dayId, noteIndex });
 
         const tour = await Tour.findById(tourId);
         if (!tour) {
@@ -677,25 +665,16 @@ const removeNoteFromTourService = async (tourId, removeData) => {
             };
         }
 
-        console.log('Day data before deletion:', {
-            items: dayData.items?.length || 0,
-            notes: dayData.notes?.length || 0,
-            noteItems: dayData.items?.filter((item) => item.type === 'note').length || 0,
-        });
-
         // Xóa từ items array (structure mới)
         if (dayData.items && dayData.items.length > 0) {
             const noteItems = dayData.items.filter((item) => item.type === 'note');
-            console.log('Found note items:', noteItems.length, 'trying to delete index:', noteIndex);
 
             if (noteIndex >= 0 && noteIndex < noteItems.length) {
                 const targetNoteItem = noteItems[noteIndex];
                 const itemIndex = dayData.items.findIndex((item) => item === targetNoteItem);
-                console.log('Target note item:', targetNoteItem, 'item index in full array:', itemIndex);
 
                 if (itemIndex !== -1) {
                     dayData.items.splice(itemIndex, 1);
-                    console.log('Removed item from items array');
                 }
             } else {
                 console.log('Note index out of bounds:', noteIndex, 'available notes:', noteItems.length);
@@ -704,7 +683,6 @@ const removeNoteFromTourService = async (tourId, removeData) => {
 
         if (dayData.notes && noteIndex >= 0 && noteIndex < dayData.notes.length) {
             dayData.notes.splice(noteIndex, 1);
-            console.log('Removed item from notes array');
         }
 
         await tour.save();
@@ -801,6 +779,53 @@ async function getTourBySlug(slug) {
     return await Tour.findOne({ slug }).populate('city').exec();
 }
 
+const updateNoteInTourService = async (tourId, { dayId, noteIndex, title, content }) => {
+    try {
+        const tour = await Tour.findById(tourId);
+        console.log('[updateNoteInTourService] tourId:', tourId);
+        console.log('[updateNoteInTourService] dayId:', dayId);
+        console.log('[updateNoteInTourService] noteIndex:', noteIndex);
+        console.log('[updateNoteInTourService] title:', title);
+        console.log('[updateNoteInTourService] content:', content);
+        if (!tour) {
+            console.log('[updateNoteInTourService] Không tìm thấy tour');
+            return { EC: 1, EM: 'Không tìm thấy tour', DT: null };
+        }
+        const dayData = tour.itinerary.find((item) => item.day === dayId);
+        console.log('[updateNoteInTourService] dayData:', dayData);
+        if (!dayData || !dayData.notes || noteIndex < 0 || noteIndex >= dayData.notes.length) {
+            console.log('[updateNoteInTourService] Không tìm thấy ghi chú hoặc noteIndex lỗi');
+            return { EC: 1, EM: 'Không tìm thấy ghi chú', DT: null };
+        }
+        // Cập nhật trong notes
+        if (title !== undefined) dayData.notes[noteIndex].title = title;
+        if (content !== undefined) dayData.notes[noteIndex].content = content;
+
+        // Cập nhật trong items (type 'note')
+        if (Array.isArray(dayData.items)) {
+            let noteItemCount = 0;
+            for (let i = 0; i < dayData.items.length; i++) {
+                const item = dayData.items[i];
+                if (item.type === 'note') {
+                    if (noteItemCount === noteIndex) {
+                        if (title !== undefined) item.title = title;
+                        if (content !== undefined) item.content = content;
+                        break;
+                    }
+                    noteItemCount++;
+                }
+            }
+        }
+
+        await tour.save();
+        console.log('[updateNoteInTourService] Cập nhật ghi chú thành công');
+        return { EC: 0, EM: 'Cập nhật ghi chú thành công', DT: tour };
+    } catch (error) {
+        console.log('[updateNoteInTourService] Lỗi khi cập nhật ghi chú:', error);
+        return { EC: 1, EM: 'Lỗi khi cập nhật ghi chú', DT: null };
+    }
+};
+
 module.exports = {
     createTourService,
     getToursService,
@@ -820,4 +845,5 @@ module.exports = {
     removeDestinationFromTourService,
     removeNoteFromTourService,
     getToursByUserIdService,
+    updateNoteInTourService,
 };
