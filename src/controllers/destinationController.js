@@ -219,8 +219,6 @@ const getDestinationsByTags = async (req, res) => {
                 EM: 'Tags parameter is required',
             });
         }
-
-        // Parse tags if it's a string
         let tagIds = [];
         if (typeof tags === 'string') {
             try {
@@ -348,65 +346,6 @@ const getDestinationsByCity = async (req, res) => {
     }
 };
 
-const filterDestinations = async (req, res) => {
-    try {
-        console.log('[filterDestinations] req.query:', req.query);
-        let { cityId, tags, limit = 20, skip = 0 } = req.query;
-        console.log('[filterDestinations] cityId:', cityId, 'tags:', tags, 'limit:', limit, 'skip:', skip);
-
-        let tagIds = [];
-        if (tags) {
-            if (typeof tags === 'string') {
-                try {
-                    tagIds = JSON.parse(tags);
-                } catch {
-                    tagIds = tags.split(',');
-                }
-            } else if (Array.isArray(tags)) {
-                tagIds = tags;
-            }
-
-            tagIds = tagIds.filter((id) => mongoose.Types.ObjectId.isValid(id));
-        }
-
-        if (cityId) {
-            if (!mongoose.Types.ObjectId.isValid(cityId)) {
-                console.log('[filterDestinations] cityId không hợp lệ:', cityId);
-                return res.status(400).json({
-                    EC: 1,
-                    EM: 'cityId không hợp lệ',
-                });
-            }
-            // Kiểm tra cityId có tồn tại không
-            const city = await City.findById(cityId);
-            if (!city) {
-                console.log('[filterDestinations] cityId không tồn tại:', cityId);
-                return res.status(400).json({
-                    EC: 1,
-                    EM: 'cityId không tồn tại',
-                });
-            }
-        }
-
-        const result = await destinationService.filterDestinations({
-            cityId,
-            tagIds,
-            limit,
-            skip,
-        });
-        console.log('[filterDestinations] result:', result);
-
-        res.status(200).json(result);
-    } catch (error) {
-        console.error('[filterDestinations] Error:', error);
-        res.status(500).json({
-            EC: 1,
-            EM: 'Lỗi server khi lọc địa điểm',
-            error: error.message,
-        });
-    }
-};
-
 module.exports = {
     createDestination,
     getDestinations,
@@ -420,5 +359,4 @@ module.exports = {
     getDestinationsByTags,
     getDestinationsByCity,
     incrementDestinationViews,
-    filterDestinations,
 };

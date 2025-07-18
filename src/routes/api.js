@@ -51,14 +51,12 @@ const {
     searchDestinations,
     getDestinationById,
     getDestinationBySlug,
-    getDestinationByIdAndUpdate,
     updateDestination,
     deleteDestination,
     getPopularDestinations,
     getDestinationsByTags,
     getDestinationsByCity,
     incrementDestinationViews,
-    filterDestinations,
 } = require('../controllers/destinationController');
 const {
     createTour,
@@ -119,7 +117,6 @@ routerAPI.put('/cityTypes/:id', auth, updateCityType);
 routerAPI.delete('/cityTypes/:id', auth, deleteCityType);
 routerAPI.get('/cities/type/:type', getCityByType);
 
-
 //Destination Type management
 routerAPI.post('/destinationType', auth, createDestinationType);
 routerAPI.get('/destinationTypes', auth, getDestinationTypes);
@@ -165,7 +162,6 @@ routerAPI.get('/destinations/by-tags', getDestinationsByTags);
 routerAPI.get('/destinations/city/:citySlug', getDestinationsByCity);   
 routerAPI.patch('/destinations/:id/views', incrementDestinationViews);
 routerAPI.get('/destinations', getDestinations);
-routerAPI.get('/destinations/filter', filterDestinations);
 routerAPI.get('/destinations/:id', getDestinationById);
 routerAPI.get('/destination/:slug', getDestinationBySlug);
 
