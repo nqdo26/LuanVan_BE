@@ -782,26 +782,19 @@ async function getTourBySlug(slug) {
 const updateNoteInTourService = async (tourId, { dayId, noteIndex, title, content }) => {
     try {
         const tour = await Tour.findById(tourId);
-        console.log('[updateNoteInTourService] tourId:', tourId);
-        console.log('[updateNoteInTourService] dayId:', dayId);
-        console.log('[updateNoteInTourService] noteIndex:', noteIndex);
-        console.log('[updateNoteInTourService] title:', title);
-        console.log('[updateNoteInTourService] content:', content);
+
         if (!tour) {
-            console.log('[updateNoteInTourService] Không tìm thấy tour');
             return { EC: 1, EM: 'Không tìm thấy tour', DT: null };
         }
         const dayData = tour.itinerary.find((item) => item.day === dayId);
-        console.log('[updateNoteInTourService] dayData:', dayData);
+
         if (!dayData || !dayData.notes || noteIndex < 0 || noteIndex >= dayData.notes.length) {
-            console.log('[updateNoteInTourService] Không tìm thấy ghi chú hoặc noteIndex lỗi');
             return { EC: 1, EM: 'Không tìm thấy ghi chú', DT: null };
         }
-        // Cập nhật trong notes
+
         if (title !== undefined) dayData.notes[noteIndex].title = title;
         if (content !== undefined) dayData.notes[noteIndex].content = content;
 
-        // Cập nhật trong items (type 'note')
         if (Array.isArray(dayData.items)) {
             let noteItemCount = 0;
             for (let i = 0; i < dayData.items.length; i++) {
@@ -818,10 +811,9 @@ const updateNoteInTourService = async (tourId, { dayId, noteIndex, title, conten
         }
 
         await tour.save();
-        console.log('[updateNoteInTourService] Cập nhật ghi chú thành công');
+
         return { EC: 0, EM: 'Cập nhật ghi chú thành công', DT: tour };
     } catch (error) {
-        console.log('[updateNoteInTourService] Lỗi khi cập nhật ghi chú:', error);
         return { EC: 1, EM: 'Lỗi khi cập nhật ghi chú', DT: null };
     }
 };
