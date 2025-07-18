@@ -787,7 +787,6 @@ const updateNoteInTourService = async (tourId, { dayId, noteIndex, title, conten
             return { EC: 1, EM: 'Không tìm thấy tour', DT: null };
         }
         const dayData = tour.itinerary.find((item) => item.day === dayId);
-
         if (!dayData || !dayData.notes || noteIndex < 0 || noteIndex >= dayData.notes.length) {
             return { EC: 1, EM: 'Không tìm thấy ghi chú', DT: null };
         }
