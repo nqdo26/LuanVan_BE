@@ -1,4 +1,6 @@
+const axios = require('axios');
 const Destination = require('../models/destination');
+const Tag = require('../models/tag');
 const slugify = require('slugify');
 
 const createDestination = async (data, files) => {
@@ -93,6 +95,68 @@ const createDestination = async (data, files) => {
 
     const destination = new Destination(data);
     await destination.save();
+
+    // Lấy tagTitles từ data.tags (nếu có)
+    let tagTitles = [];
+    if (data.tags && Array.isArray(data.tags) && data.tags.length > 0) {
+        // Truy vấn model Tag để lấy tên
+
+        const tags = await Tag.find({ _id: { $in: data.tags } });
+        tagTitles = tags.map((t) => t.title);
+    }
+
+    // Gửi info tới RAG server
+    try {
+        // Map English day keys to Vietnamese
+        const dayMap = {
+            mon: 'thứ hai',
+            tue: 'thứ ba',
+            wed: 'thứ tư',
+            thu: 'thứ năm',
+            fri: 'thứ sáu',
+            sat: 'thứ bảy',
+            sun: 'chủ nhật',
+        };
+        const openHourStr = Object.entries(data.openHour)
+            .map(([day, time]) => {
+                if (day === 'allday') {
+                    return `Cả tuần: ${time ? 'Mở cả ngày' : 'Không'}`;
+                }
+                const dayVN = dayMap[day] || day;
+                // Nếu không có giờ mở/đóng thì ghi Đóng cửa
+                const open = time.open ? time.open : 'Đóng cửa';
+                const close = time.close ? time.close : 'Đóng cửa';
+                return `${dayVN}: ${open} - ${close}`;
+            })
+            .join(', ');
+
+        const combinedInfo = [
+            `Tiêu đề: ${data.title}`,
+            `Tag: ${tagTitles.length ? tagTitles.join(', ') : 'Chưa có'}`,
+            `Loại địa điểm: ${data.type || ''}`,
+            `Địa chỉ: ${data.location.address}`,
+            `Mô tả: ${data.details.description}`,
+            `Dịch vụ: ${(data.details.services || []).join(', ')}`,
+            `Điểm nổi bật: ${(data.details.highlight || []).join(', ')}`,
+            `Hoạt động: ${(data.details.activities || []).join(', ')}`,
+            `Thông tin bổ ích: ${(data.details.usefulInfo || []).join(', ')}`,
+            `Phí tham quan: ${(data.details.fee || []).join(', ')}`,
+            `Giờ mở cửa: ${openHourStr}`,
+            `Liên hệ: Phone: ${data.contactInfo.phone}, Website: ${data.contactInfo.website}, Facebook: ${data.contactInfo.facebook}, Instagram: ${data.contactInfo.instagram}`,
+        ].join('\n');
+
+        const ingestPayload = {
+            destinationId: destination._id.toString(),
+            cityId: data.location.city,
+            info: combinedInfo,
+        };
+
+        const url = process.env.RAG_SERVER_URL || 'http://localhost:8000';
+        await axios.post(`${url}/v1/ingest`, ingestPayload);
+    } catch (error) {
+        console.error('Lỗi gửi dữ liệu đến RAG server:', error.message);
+        console.error('url:', process.env.RAG_SERVER_URL);
+    }
     return { EC: 0, EM: 'Tạo địa điểm thành công', data: destination };
 };
 
