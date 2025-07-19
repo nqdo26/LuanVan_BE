@@ -378,14 +378,12 @@ const updateNoteInTour = async (req, res) => {
     try {
         const { tourId } = req.params;
         const { dayId, noteIndex, title, content } = req.body;
-        console.log('[updateNoteInTour] tourId:', tourId);
-        console.log('[updateNoteInTour] body:', req.body);
+
         if (!dayId || noteIndex === undefined) {
-            console.log('[updateNoteInTour] Thiếu thông tin dayId hoặc noteIndex');
             return res.status(400).json({ EC: 1, EM: 'Thiếu thông tin', DT: null });
         }
         const result = await updateNoteInTourService(tourId, { dayId, noteIndex, title, content });
-        console.log('[updateNoteInTour] result:', result);
+
         return res.status(result.EC === 0 ? 200 : 400).json(result);
     } catch (error) {
         console.log('[updateNoteInTour] Lỗi server:', error);

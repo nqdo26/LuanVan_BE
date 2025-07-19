@@ -29,7 +29,15 @@ const createTourService = async (tourData) => {
         await tour.populate([
             { path: 'city', select: 'name slug' },
             { path: 'tags', select: 'title slug' },
-            { path: 'itinerary.descriptions.destinationId', select: 'name slug images' },
+            { path: 'itinerary.descriptions.destinationId', select: 'name slug images statistics' },
+            {
+                path: 'itinerary.items.destinationId',
+                select: 'title slug album location tags type statistics',
+                populate: {
+                    path: 'tags',
+                    select: 'title slug',
+                },
+            },
         ]);
 
         return {
@@ -69,7 +77,15 @@ const getToursService = async (page = 1, limit = 10, search = '', cityId = '') =
             .populate([
                 { path: 'city', select: 'name slug images description' },
                 { path: 'tags', select: 'title slug' },
-                { path: 'itinerary.descriptions.destinationId', select: 'name slug images' },
+                { path: 'itinerary.descriptions.destinationId', select: 'name slug images statistics' },
+                {
+                    path: 'itinerary.items.destinationId',
+                    select: 'title slug album location tags type statistics',
+                    populate: {
+                        path: 'tags',
+                        select: 'title slug',
+                    },
+                },
             ])
             .sort({ createdAt: -1 })
             .skip(skip)
@@ -106,7 +122,15 @@ const getTourBySlugService = async (slug) => {
         const tour = await Tour.findOne({ slug }).populate([
             { path: 'city', select: 'name slug images description info weather type views' },
             { path: 'tags', select: 'title slug' },
-            { path: 'itinerary.descriptions.destinationId', select: 'name slug images description address rating' },
+            { path: 'itinerary.descriptions.destinationId', select: 'name slug images description address statistics' },
+            {
+                path: 'itinerary.items.destinationId',
+                select: 'title slug album location tags type statistics',
+                populate: {
+                    path: 'tags',
+                    select: 'title slug',
+                },
+            },
         ]);
 
         if (!tour) {
@@ -138,7 +162,7 @@ const getTourByIdService = async (id) => {
             { path: 'city', select: 'name slug images description' },
             { path: 'tags', select: 'title slug' },
             { path: 'userId', select: 'email username fullname' },
-            { path: 'itinerary.descriptions.destinationId', select: 'name slug images description address rating' },
+            { path: 'itinerary.descriptions.destinationId', select: 'name slug images description address statistics' },
             {
                 path: 'itinerary.items.destinationId',
                 select: 'title slug album location tags type statistics',
@@ -209,7 +233,15 @@ const updateTourService = async (id, updateData) => {
         const tour = await Tour.findByIdAndUpdate(id, updateData, { new: true, runValidators: true }).populate([
             { path: 'city', select: 'name slug images description info weather type views' },
             { path: 'tags', select: 'title slug' },
-            { path: 'itinerary.descriptions.destinationId', select: 'name slug images description address rating' },
+            { path: 'itinerary.descriptions.destinationId', select: 'name slug images description address statistics' },
+            {
+                path: 'itinerary.items.destinationId',
+                select: 'title slug album location tags type statistics',
+                populate: {
+                    path: 'tags',
+                    select: 'title slug',
+                },
+            },
         ]);
 
         if (!tour) {
@@ -280,7 +312,15 @@ const getPublicToursService = async (page = 1, limit = 10, cityId = '') => {
         const tours = await Tour.find(filter)
             .populate([
                 { path: 'city', select: 'name slug images' },
-                { path: 'itinerary.descriptions.destinationId', select: 'name slug images rating' },
+                { path: 'itinerary.descriptions.destinationId', select: 'name slug images statistics' },
+                {
+                    path: 'itinerary.items.destinationId',
+                    select: 'title slug album location tags type statistics',
+                    populate: {
+                        path: 'tags',
+                        select: 'title slug',
+                    },
+                },
             ])
             .sort({ createdAt: -1 })
             .skip(skip)
@@ -724,7 +764,15 @@ const getToursByUserIdService = async (userId, page = 1, limit = 10) => {
             .populate([
                 { path: 'city', select: 'name slug images' },
                 { path: 'tags', select: 'title slug' },
-                { path: 'itinerary.descriptions.destinationId', select: 'name slug images' },
+                { path: 'itinerary.descriptions.destinationId', select: 'name slug images statistics' },
+                {
+                    path: 'itinerary.items.destinationId',
+                    select: 'title slug album location tags type statistics',
+                    populate: {
+                        path: 'tags',
+                        select: 'title slug',
+                    },
+                },
             ])
             .sort({ createdAt: -1 })
             .skip(skip)
