@@ -145,10 +145,13 @@ const createDestination = async (data, files) => {
             `Liên hệ: Phone: ${data.contactInfo.phone}, Website: ${data.contactInfo.website}, Facebook: ${data.contactInfo.facebook}, Instagram: ${data.contactInfo.instagram}`,
         ].join('\n');
 
+        // Thêm slug và name vào ingestPayload để RAG server có thể trả về đúng link và tên
         const ingestPayload = {
             destinationId: destination._id.toString(),
             cityId: data.location.city,
             info: combinedInfo,
+            slug: data.slug,
+            name: data.title,
         };
 
         const url = process.env.RAG_SERVER_URL || 'http://localhost:8000';

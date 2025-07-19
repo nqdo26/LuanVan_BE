@@ -74,6 +74,7 @@ const {
     removeNoteFromTour,
     updateNoteInTour,
 } = require('../controllers/tourController');
+const { createChatCompletion } = require('../controllers/chatController');
 
 const routerAPI = express.Router();
 
@@ -130,7 +131,7 @@ routerAPI.patch('/users/update-avatar', auth, uploadByFolder('AvartarImages').si
 
 // City routes
 routerAPI.post('/city', auth, uploadByFolder('cityImages').array('images', 4), createCity);
-routerAPI.get('/cities',  getCities);
+routerAPI.get('/cities', getCities);
 routerAPI.get('/cities-with-count', auth, getCitiesWithDestinationCount);
 routerAPI.get('/cities/:id', getCityById);
 routerAPI.get('/city/:slug', getCityBySlug);
@@ -140,7 +141,7 @@ routerAPI
     .put(auth, uploadByFolder('cityImages').array('images', 4), getCityByIdAndUpdate);
 routerAPI.put('/cities/:id', auth, uploadByFolder('cityImages').array('images', 4), updateCity);
 routerAPI.patch('/cities/:id/views', incrementCityViewsController);
-routerAPI.get('/cities/:id/deletion-info',  getCityDeletionInfo);
+routerAPI.get('/cities/:id/deletion-info', getCityDeletionInfo);
 routerAPI.delete('/cities/:id', auth, deleteCity);
 
 // Destination routes
@@ -159,7 +160,7 @@ routerAPI.post(
 routerAPI.get('/destinations/popular', getPopularDestinations);
 routerAPI.get('/destinations/search', searchDestinations);
 routerAPI.get('/destinations/by-tags', getDestinationsByTags);
-routerAPI.get('/destinations/city/:citySlug', getDestinationsByCity);   
+routerAPI.get('/destinations/city/:citySlug', getDestinationsByCity);
 routerAPI.patch('/destinations/:id/views', incrementDestinationViews);
 routerAPI.get('/destinations', getDestinations);
 routerAPI.get('/destinations/:id', getDestinationById);
@@ -200,5 +201,8 @@ routerAPI.delete('/tours/:tourId/notes', auth, removeNoteFromTour);
 
 // Admin statistics
 routerAPI.get('/admin/statistics', auth, getStatistics);
+
+// Chat management
+routerAPI.post('/chat/completions', auth, createChatCompletion);
 
 module.exports = routerAPI;

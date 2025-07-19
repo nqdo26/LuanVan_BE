@@ -4,26 +4,25 @@ const chatSchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'user' },
     title: {
         type: String,
-        index: true, // Thêm index để tối ưu tìm kiếm
+        index: true, 
     },
     messages: [
         {
             role: { type: String, enum: ['user', 'assistant'], required: true },
             content: { type: String, required: true },
-            cities: [{ type: mongoose.Schema.Types.ObjectId, ref: 'city' }],
+            city: { type: mongoose.Schema.Types.ObjectId, ref: 'city' },
             createdAt: { type: Date, default: Date.now },
         },
     ],
-    // customization: {},
     createdAt: {
         type: Date,
         default: Date.now,
-        index: true, // Thêm index cho sorting
+        index: true, 
     },
     updatedAt: {
         type: Date,
         default: Date.now,
-        index: true, // Thêm index cho sorting
+        index: true, 
     },
 });
 
