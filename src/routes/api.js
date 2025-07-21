@@ -74,7 +74,13 @@ const {
     removeNoteFromTour,
     updateNoteInTour,
 } = require('../controllers/tourController');
-const { createChatCompletion } = require('../controllers/chatController');
+const {
+    createChatCompletion,
+    createNewChat,
+    deleteChat,
+    getChatHistory,
+    getChatById,
+} = require('../controllers/chatController');
 
 const routerAPI = express.Router();
 
@@ -203,6 +209,10 @@ routerAPI.delete('/tours/:tourId/notes', auth, removeNoteFromTour);
 routerAPI.get('/admin/statistics', auth, getStatistics);
 
 // Chat management
+routerAPI.get('/chats', auth, getChatHistory); // Lấy lịch sử chat
 routerAPI.post('/chat/completions', auth, createChatCompletion);
+routerAPI.post('/chat/new', auth, createNewChat);
+routerAPI.delete('/chat/:id', auth, deleteChat);
+routerAPI.get('/chats/:id', auth, getChatById); 
 
 module.exports = routerAPI;

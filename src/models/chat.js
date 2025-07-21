@@ -1,10 +1,10 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 const chatSchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'user' },
     title: {
         type: String,
-        index: true, 
+        index: true,
     },
     messages: [
         {
@@ -17,12 +17,12 @@ const chatSchema = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now,
-        index: true, 
+        index: true,
     },
     updatedAt: {
         type: Date,
         default: Date.now,
-        index: true, 
+        index: true,
     },
 });
 
@@ -31,5 +31,4 @@ chatSchema.index({
 });
 
 const Chat = mongoose.model('chat', chatSchema);
-
-export default Chat;
+module.exports = Chat;
