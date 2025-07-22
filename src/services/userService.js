@@ -221,7 +221,7 @@ const addToFavoritesService = async (userId, destinationId) => {
         if (user.favortites.includes(destinationId)) {
             return {
                 EC: 1,
-                EM: 'Destination already in favorites',
+                EM: 'Địa điểm đã có trong danh sách yêu thích',
             };
         }
 
