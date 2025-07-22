@@ -127,6 +127,13 @@ const getCityByIdAndUpdate = async (req, res) => {
             body.createdBy = req.user.email;
         }
 
+        if (isUpdateRequest && body) {
+            let existingImages = Array.isArray(body.existing_images) ? body.existing_images : [];
+
+            let newImages = (req.files || []).map((f) => f.path);
+            body.images = [...existingImages, ...newImages];
+        }
+
         const result = await getCityByIdAndUpdateService(
             id,
             isUpdateRequest ? body : null,
