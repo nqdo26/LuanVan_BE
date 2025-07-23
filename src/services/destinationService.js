@@ -6,9 +6,11 @@ const slugify = require('slugify');
 const createDestination = async (data, files) => {
     if (data.title) {
         const slug = slugify(data.title, { lower: true });
-        const existed = await Destination.findOne({ slug });
-        if (existed) {
-            return { EC: 1, EM: 'Tên địa điểm đã tồn tại. Vui lòng chọn tên khác.' };
+        // Kiểm tra trùng title và slug trong cùng thành phố
+        const existedByTitle = await Destination.findOne({ title: data.title.trim(), 'location.city': data.city });
+        const existedBySlug = await Destination.findOne({ slug, 'location.city': data.city });
+        if (existedByTitle || existedBySlug) {
+            return { EC: 1, EM: 'Tên địa điểm đã tồn tại trong thành phố này. Vui lòng chọn tên khác.' };
         }
         data.slug = slug;
     }
