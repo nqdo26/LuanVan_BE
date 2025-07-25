@@ -399,24 +399,38 @@ const getDestinationsByTags = async (tagIds, cityId = null, limit = 20) => {
     }
 };
 
+// Hàm loại bỏ dấu tiếng Việt
+function removeVietnameseTones(str) {
+    return str
+        .normalize('NFD')
+        .replace(/\p{Diacritic}/gu, '')
+        .replace(/đ/g, 'd')
+        .replace(/Đ/g, 'D');
+}
+
 const searchDestinations = async (query, options = {}) => {
     try {
         const { limit = 10, skip = 0 } = options;
 
-        const searchFilter = {
-            $or: [
-                { title: { $regex: query, $options: 'i' } },
-                { 'details.description': { $regex: query, $options: 'i' } },
-                { 'location.address': { $regex: query, $options: 'i' } },
-            ],
-        };
-
-        const destinations = await Destination.find(searchFilter)
+        // Lấy tất cả địa điểm và lọc trên server để loại bỏ dấu và không phân biệt hoa thường
+        const allDestinations = await Destination.find()
             .populate('tags', 'title')
-            .populate('location.city', 'name slug')
-            .limit(parseInt(limit))
-            .skip(parseInt(skip))
-            .sort({ title: 1 });
+            .populate('location.city', 'name slug');
+
+        const q = removeVietnameseTones(query.trim().toLowerCase());
+        const filtered = allDestinations.filter((item) => {
+            const nameMatch = item.title && removeVietnameseTones(item.title.toLowerCase()).includes(q);
+            const descMatch =
+                item.details?.description && removeVietnameseTones(item.details.description.toLowerCase()).includes(q);
+            const addressMatch =
+                item.location?.address && removeVietnameseTones(item.location.address.toLowerCase()).includes(q);
+            const tagMatch =
+                Array.isArray(item.tags) &&
+                item.tags.some((tag) => tag.title && removeVietnameseTones(tag.title.toLowerCase()).includes(q));
+            return nameMatch || descMatch || addressMatch || tagMatch;
+        });
+
+        const destinations = filtered.slice(skip, skip + limit);
 
         return {
             EC: 0,
@@ -471,7 +485,7 @@ const incrementDestinationViews = async (destinationId) => {
 
 const getDestinationsByCity = async (citySlug, options = {}) => {
     try {
-        const { limit = 20, skip = 0, sort = 'createdAt', order = -1 } = options;
+        const { limit = 20, skip = 0, sort = 'createdAt', order = -1, categories = [] } = options;
 
         const City = require('../models/city');
         const city = await City.findOne({ slug: citySlug }).select('_id name slug');
@@ -487,6 +501,10 @@ const getDestinationsByCity = async (citySlug, options = {}) => {
         const filter = {
             'location.city': city._id,
         };
+        if (categories && Array.isArray(categories) && categories.length > 0) {
+            // Lọc theo tags (ObjectId)
+            filter.tags = { $in: categories };
+        }
 
         const sortObj = {};
         sortObj[sort] = parseInt(order);

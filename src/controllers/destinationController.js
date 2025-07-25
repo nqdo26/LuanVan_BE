@@ -313,7 +313,7 @@ const incrementDestinationViews = async (req, res) => {
 const getDestinationsByCity = async (req, res) => {
     try {
         const { citySlug } = req.params;
-        const { limit, skip, sort, order } = req.query;
+        const { limit, skip, sort, order, categories } = req.query;
 
         // Validate citySlug
         if (!citySlug || typeof citySlug !== 'string') {
@@ -324,11 +324,22 @@ const getDestinationsByCity = async (req, res) => {
             });
         }
 
+        // Xử lý categories: có thể là string hoặc array
+        let categoryArr = [];
+        if (categories) {
+            if (Array.isArray(categories)) {
+                categoryArr = categories;
+            } else {
+                categoryArr = [categories];
+            }
+        }
+
         const result = await destinationService.getDestinationsByCity(citySlug, {
             limit,
             skip,
             sort,
             order,
+            categories: categoryArr,
         });
 
         if (result.EC === 0) {
