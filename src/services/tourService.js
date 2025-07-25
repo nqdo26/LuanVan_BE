@@ -859,7 +859,22 @@ const updateNoteInTourService = async (tourId, { dayId, noteIndex, title, conten
 
         await tour.save();
 
-        return { EC: 0, EM: 'Cập nhật ghi chú thành công', DT: tour };
+        // Populate lại tour như getTourBySlugService
+        const populatedTour = await Tour.findById(tourId).populate([
+            { path: 'city', select: 'name slug images description info weather type views' },
+            { path: 'tags', select: 'title slug' },
+            { path: 'itinerary.descriptions.destinationId', select: 'name slug images description address statistics' },
+            {
+                path: 'itinerary.items.destinationId',
+                select: 'title slug album location tags type statistics',
+                populate: {
+                    path: 'tags',
+                    select: 'title slug',
+                },
+            },
+        ]);
+
+        return { EC: 0, EM: 'Cập nhật ghi chú thành công', DT: populatedTour };
     } catch (error) {
         return { EC: 1, EM: 'Lỗi khi cập nhật ghi chú', DT: null };
     }
