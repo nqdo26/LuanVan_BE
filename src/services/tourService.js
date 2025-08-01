@@ -17,7 +17,7 @@ const createTourService = async (tourData) => {
             if (existingTour) {
                 return {
                     EC: 1,
-                    EM: 'Bạn đã có tour với tên này rồi',
+                    EM: 'Bạn đã có chuyến đi với tên này rồi',
                     DT: null,
                 };
             }
@@ -53,7 +53,7 @@ const createTourService = async (tourData) => {
         if (error.code === 11000) {
             return {
                 EC: 1,
-                EM: 'Bạn đã có tour với tên này rồi',
+                EM: 'Bạn đã có chuyến đi với tên này rồi',
                 DT: null,
             };
         }
@@ -238,7 +238,7 @@ const updateTourService = async (id, updateData) => {
             if (existingSlugTour) {
                 return {
                     EC: 1,
-                    EM: 'Bạn đã có tour với tên này rồi. Vui lòng chọn tên khác.',
+                    EM: 'Bạn đã có chuyến đi với tên này rồi. Vui lòng chọn tên khác.',
                     DT: null,
                 };
             }
@@ -282,7 +282,7 @@ const updateTourService = async (id, updateData) => {
         if (error.code === 11000) {
             return {
                 EC: 1,
-                EM: 'Bạn đã có tour với tên này rồi',
+                EM: 'Bạn đã có chuyến đi với tên này rồi',
                 DT: null,
             };
         }
