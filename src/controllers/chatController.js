@@ -1,4 +1,31 @@
-// API lấy chi tiết 1 cuộc trò chuyện theo id (GET /api/chats/:id)
+const axios = require('axios');
+const Chat = require('../models/chat');
+
+// Hàm chọn model tối ưu dựa trên strategy
+const selectOptimalModel = (strategy = 'balanced') => {
+    const models = {
+        // Model chính - hiệu suất cao
+        primary: 'deepseek-r1-distill-llama-70b',
+        // Model backup - khi primary hết token
+        backup: 'llama-3.3-70b-versatile',
+        // Model tiết kiệm - cho query đơn giản
+        economical: 'llama-3.1-8b-instant',
+    };
+
+    switch (strategy) {
+        case 'high-performance':
+            return models.primary;
+        case 'economical':
+            return models.economical;
+        case 'backup':
+            return models.backup;
+        case 'balanced':
+        default:
+            // Logic có thể mở rộng: kiểm tra token availability, load balancing, etc.
+            return models.primary;
+    }
+};
+
 const getChatById = async (req, res) => {
     try {
         const { id } = req.params;
@@ -10,7 +37,7 @@ const getChatById = async (req, res) => {
         return res.status(500).json({ error: err.message });
     }
 };
-// API lấy lịch sử chat theo userId (GET /api/chats?userId=...)
+
 const getChatHistory = async (req, res) => {
     try {
         const { userId } = req.query;
@@ -21,8 +48,6 @@ const getChatHistory = async (req, res) => {
         return res.status(500).json({ error: err.message });
     }
 };
-const axios = require('axios');
-const Chat = require('../models/chat');
 
 const createChatCompletion = async (req, res) => {
     try {
@@ -31,16 +56,67 @@ const createChatCompletion = async (req, res) => {
             return res.status(400).json({ error: 'messages là bắt buộc' });
         }
 
+        // Luôn sử dụng deepseek-r1-distill-llama-70b
+        let selectedModel = 'deepseek-r1-distill-llama-70b';
+
+        console.log(`🤖 [MODEL SELECTION] Always using: ${selectedModel}`);
+
         const payload = {
             messages,
+            model: selectedModel, // Luôn gửi model được chọn
             isUseKnowledge: isUseKnowledge !== undefined ? isUseKnowledge : true,
         };
         if (cityId) payload.cityId = cityId;
-        if (model) payload.model = model;
 
-        const response = await axios.post(process.env.RAG_SERVER_URL + '/v1/chat/completions', payload, {
-            timeout: 20000,
-        });
+        let response;
+        try {
+            // Thử với model được chọn
+            response = await axios.post(process.env.RAG_SERVER_URL + '/v1/chat/completions', payload, {
+                timeout: 20000,
+            });
+        } catch (error) {
+            // Nếu lỗi liên quan đến token hoặc model không khả dụng
+            if (
+                error.response &&
+                (error.response.status === 429 || // Rate limit exceeded
+                    error.response.status === 400 || // Bad request (có thể do hết token)
+                    (error.response.data &&
+                        error.response.data.error &&
+                        error.response.data.error.message &&
+                        error.response.data.error.message.includes('quota')))
+            ) {
+                console.log(`⚠️ [MODEL FALLBACK] ${selectedModel} failed, trying backup model...`);
+
+                // Thử với backup model
+                const backupModel = selectOptimalModel('backup');
+                if (backupModel !== selectedModel) {
+                    payload.model = backupModel;
+                    console.log(`🔄 [MODEL FALLBACK] Retrying with backup model: ${backupModel}`);
+
+                    try {
+                        response = await axios.post(process.env.RAG_SERVER_URL + '/v1/chat/completions', payload, {
+                            timeout: 20000,
+                        });
+                    } catch (backupError) {
+                        // Nếu backup cũng fail, thử economical model
+                        const economicalModel = selectOptimalModel('economical');
+                        if (economicalModel !== backupModel && economicalModel !== selectedModel) {
+                            payload.model = economicalModel;
+                            console.log(`🔄 [MODEL FALLBACK] Retrying with economical model: ${economicalModel}`);
+                            response = await axios.post(process.env.RAG_SERVER_URL + '/v1/chat/completions', payload, {
+                                timeout: 20000,
+                            });
+                        } else {
+                            throw backupError;
+                        }
+                    }
+                } else {
+                    throw error;
+                }
+            } else {
+                throw error;
+            }
+        }
 
         if (userId) {
             if (!title) {
