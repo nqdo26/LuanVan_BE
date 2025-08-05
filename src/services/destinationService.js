@@ -149,7 +149,7 @@ const createDestination = async (data, files) => {
         // Thêm slug và name vào ingestPayload để RAG server có thể trả về đúng link và tên
         const ingestPayload = {
             destinationId: destination._id.toString(),
-            cityId: data.location.city,
+            cityId: data.location.city.toString(),
             info: JSON.stringify(structuredData), // JSON string theo DestinationDetails format
             slug: data.slug,
             name: data.title,
@@ -350,11 +350,106 @@ const updateDestination = async (id, data, files) => {
         .populate('tags')
         .populate('location.city');
 
+    // Gửi dữ liệu cập nhật tới RAG server
+    try {
+        // Lấy tagTitles từ updatedDestination.tags (nếu có)
+        let tagTitles = [];
+        if (updatedDestination.tags && Array.isArray(updatedDestination.tags) && updatedDestination.tags.length > 0) {
+            tagTitles = updatedDestination.tags.map((t) => t.title);
+        }
+
+        // Map English day keys to Vietnamese
+        const dayMap = {
+            mon: 'thứ hai',
+            tue: 'thứ ba',
+            wed: 'thứ tư',
+            thu: 'thứ năm',
+            fri: 'thứ sáu',
+            sat: 'thứ bảy',
+            sun: 'chủ nhật',
+        };
+
+        const openHourStr = Object.entries(updatedDestination.openHour || {})
+            .map(([day, time]) => {
+                if (day === 'allday') {
+                    return `Cả tuần: ${time ? 'Mở cả ngày' : 'Không'}`;
+                }
+                const dayVN = dayMap[day] || day;
+                // Nếu không có giờ mở/đóng thì ghi Đóng cửa
+                const open = time?.open ? time.open : 'Đóng cửa';
+                const close = time?.close ? time.close : 'Đóng cửa';
+                return `${dayVN}: ${open} - ${close}`;
+            })
+            .join(', ');
+
+        // Tạo structured data cho RAG semantic chunking
+        const structuredData = {
+            description: updatedDestination.details?.description || '',
+            highlight: (updatedDestination.details?.highlight || []).join(', '),
+            services: (updatedDestination.details?.services || []).join(', '),
+            cultureType: (updatedDestination.details?.cultureType || []).join(', '),
+            activities: (updatedDestination.details?.activities || []).join(', '),
+            fee: (updatedDestination.details?.fee || []).join(', '),
+            usefulInfo: (updatedDestination.details?.usefulInfo || []).join(', '),
+            tags: tagTitles.length ? tagTitles.join(', ') : '', // Thêm tags
+            openHour: openHourStr,
+            contactInfo: `Phone: ${updatedDestination.contactInfo?.phone || ''}, Website: ${
+                updatedDestination.contactInfo?.website || ''
+            }, Facebook: ${updatedDestination.contactInfo?.facebook || ''}, Instagram: ${
+                updatedDestination.contactInfo?.instagram || ''
+            }`,
+        };
+
+        // Payload cho update endpoint
+        const updatePayload = {
+            destinationId: updatedDestination._id.toString(),
+            cityId:
+                updatedDestination.location?.city?._id?.toString() ||
+                updatedDestination.location?.city?.toString() ||
+                '',
+            info: JSON.stringify(structuredData), // JSON string theo DestinationDetails format
+            slug: updatedDestination.slug,
+            name: updatedDestination.title,
+        };
+
+        const url = process.env.RAG_SERVER_URL || 'http://localhost:8000';
+    } catch (error) {
+        console.error('[RAG UPDATE ERROR] Lỗi gửi dữ liệu cập nhật đến RAG server:', error.message);
+        console.error('url:', process.env.RAG_SERVER_URL);
+        // Không throw error vì destination đã được update thành công trong DB
+    }
+
     return updatedDestination;
 };
 
 const deleteDestination = async (id) => {
-    return await Destination.findByIdAndDelete(id);
+    // Lấy thông tin destination trước khi xóa
+    const destination = await Destination.findById(id);
+    if (!destination) {
+        throw new Error('Destination not found');
+    }
+
+    // Xóa destination từ MongoDB
+    const deletedDestination = await Destination.findByIdAndDelete(id);
+
+    // Xóa dữ liệu tương ứng trên Pinecone
+    try {
+        const deletePayload = {
+            destiationId: destination._id.toString(), // Chú ý: API có typo "destiation"
+            cityId: destination.location?.city?._id?.toString() || destination.location?.city?.toString() || '',
+        };
+
+        const url = process.env.RAG_SERVER_URL || 'http://localhost:8000';
+        const response = await axios.post(`${url}/v1/delete-document`, deletePayload);
+
+        console.log(`[RAG DELETE SUCCESS] Destination ${destination._id} deleted from Pinecone:`, response.data);
+    } catch (error) {
+        console.error('[RAG DELETE ERROR] Lỗi xóa dữ liệu từ RAG server:', error.message);
+        console.error('url:', process.env.RAG_SERVER_URL);
+        // Không throw error vì destination đã được xóa thành công trong DB
+    }
+
+    return deletedDestination;
 };
 
 const getPopularDestinations = async () => {
