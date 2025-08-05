@@ -4,12 +4,12 @@ const Chat = require('../models/chat');
 // Hàm chọn model tối ưu dựa trên strategy
 const selectOptimalModel = (strategy = 'balanced') => {
     const models = {
-        // Model chính - hiệu suất cao
-        primary: 'deepseek-r1-distill-llama-70b',
-        // Model backup - khi primary hết token
-        backup: 'llama-3.3-70b-versatile',
-        // Model tiết kiệm - cho query đơn giản
-        economical: 'llama-3.1-8b-instant',
+        // Model chính - thân thiện cho chatbot du lịch
+        primary: 'llama-3.3-70b-versatile',
+        // Model backup - nhanh và ổn định
+        backup: 'llama-3.1-70b-versatile',
+        // Model tiết kiệm - hiệu quả cho query đơn giản
+        economical: 'mixtral-8x7b-32768',
     };
 
     switch (strategy) {
@@ -38,6 +38,61 @@ const getChatById = async (req, res) => {
     }
 };
 
+// Controller để lấy chat completion với populate destinations
+const getChatCompletion = async (req, res) => {
+    const { id } = req.params;
+
+    if (!id || typeof id !== 'string') {
+        return res.status(400).json({
+            EC: 1,
+            EM: 'Validation error',
+            data: null,
+            error: {
+                code: 400,
+                details: 'Chat ID is required.',
+            },
+        });
+    }
+
+    try {
+        // Populate chat với messages và destinations
+        const chat = await Chat.findById(id).populate({
+            path: 'messages.destinations',
+            model: 'destination',
+            select: 'name slug images description location rating statistics',
+        });
+
+        if (!chat) {
+            return res.status(404).json({
+                EC: 1,
+                EM: 'Chat not found',
+                data: null,
+                error: {
+                    code: 404,
+                    details: 'Chat not found.',
+                },
+            });
+        }
+
+        return res.status(200).json({
+            EC: 0,
+            EM: 'Chat fetched successfully',
+            data: chat,
+        });
+    } catch (error) {
+        console.error('Error fetching chat:', error);
+        return res.status(500).json({
+            EC: 1,
+            EM: 'Internal server error',
+            data: null,
+            error: {
+                code: 500,
+                details: error instanceof Error ? error.message : 'Unknown error',
+            },
+        });
+    }
+};
+
 const getChatHistory = async (req, res) => {
     try {
         const { userId } = req.query;
@@ -56,10 +111,10 @@ const createChatCompletion = async (req, res) => {
             return res.status(400).json({ error: 'messages là bắt buộc' });
         }
 
-        // Luôn sử dụng deepseek-r1-distill-llama-70b
-        let selectedModel = 'deepseek-r1-distill-llama-70b';
+        // Sử dụng model phù hợp cho chatbot du lịch
+        let selectedModel = 'llama-3.3-70b-versatile'; // Thay đổi từ deepseek-r1
 
-        console.log(`🤖 [MODEL SELECTION] Always using: ${selectedModel}`);
+        console.log(`🤖 [MODEL SELECTION] Using travel-friendly model: ${selectedModel}`);
 
         const payload = {
             messages,
@@ -144,12 +199,30 @@ const createChatCompletion = async (req, res) => {
                 });
             }
             if (assistantMsg && assistantMsg.content) {
-                chatMsgArr.push({
+                const assistantMsgData = {
                     role: 'assistant',
                     content: assistantMsg.content,
                     city: cityId || null,
                     createdAt: new Date(),
-                });
+                };
+
+                // Thêm destinations nếu có trong response
+                if (assistantMsg.destinations && Array.isArray(assistantMsg.destinations)) {
+                    // Lấy danh sách destinationId từ response
+                    const destinationIds = assistantMsg.destinations
+                        .map((dest) => dest.destinationId)
+                        .filter((id) => id); // Loại bỏ các id null/undefined
+
+                    // Loại bỏ trùng lặp
+                    const uniqueDestinationIds = [...new Set(destinationIds)];
+                    assistantMsgData.destinations = uniqueDestinationIds;
+
+                    console.log(
+                        `💾 [DESTINATIONS] Saving ${uniqueDestinationIds.length} destinations for assistant message`,
+                    );
+                }
+
+                chatMsgArr.push(assistantMsgData);
             }
             // Tìm chat theo userId và title, nếu chưa có thì tạo mới
             let chat = await Chat.findOne({ userId, title });
@@ -224,4 +297,5 @@ module.exports = {
     deleteChat,
     getChatHistory,
     getChatById,
+    getChatCompletion,
 };

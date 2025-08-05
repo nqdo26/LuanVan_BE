@@ -132,26 +132,25 @@ const createDestination = async (data, files) => {
             })
             .join(', ');
 
-        const combinedInfo = [
-            `Tiêu đề: ${data.title}`,
-            `Tag: ${tagTitles.length ? tagTitles.join(', ') : 'Chưa có'}`,
-            `Loại địa điểm: ${data.type || ''}`,
-            `Địa chỉ: ${data.location.address}`,
-            `Mô tả: ${data.details.description}`,
-            `Dịch vụ: ${(data.details.services || []).join(', ')}`,
-            `Điểm nổi bật: ${(data.details.highlight || []).join(', ')}`,
-            `Hoạt động: ${(data.details.activities || []).join(', ')}`,
-            `Thông tin bổ ích: ${(data.details.usefulInfo || []).join(', ')}`,
-            `Phí tham quan: ${(data.details.fee || []).join(', ')}`,
-            `Giờ mở cửa: ${openHourStr}`,
-            `Liên hệ: Phone: ${data.contactInfo.phone}, Website: ${data.contactInfo.website}, Facebook: ${data.contactInfo.facebook}, Instagram: ${data.contactInfo.instagram}`,
-        ].join('\n');
+        // Tạo structured data cho RAG semantic chunking
+        const structuredData = {
+            description: data.details.description || '',
+            highlight: (data.details.highlight || []).join(', '),
+            services: (data.details.services || []).join(', '),
+            cultureType: (data.details.cultureType || []).join(', '),
+            activities: (data.details.activities || []).join(', '),
+            fee: (data.details.fee || []).join(', '),
+            usefulInfo: (data.details.usefulInfo || []).join(', '),
+            tags: tagTitles.length ? tagTitles.join(', ') : '', // Thêm tags
+            openHour: openHourStr,
+            contactInfo: `Phone: ${data.contactInfo.phone}, Website: ${data.contactInfo.website}, Facebook: ${data.contactInfo.facebook}, Instagram: ${data.contactInfo.instagram}`,
+        };
 
         // Thêm slug và name vào ingestPayload để RAG server có thể trả về đúng link và tên
         const ingestPayload = {
             destinationId: destination._id.toString(),
             cityId: data.location.city,
-            info: combinedInfo,
+            info: JSON.stringify(structuredData), // JSON string theo DestinationDetails format
             slug: data.slug,
             name: data.title,
         };

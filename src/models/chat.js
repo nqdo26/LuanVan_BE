@@ -12,6 +12,7 @@ const chatSchema = new mongoose.Schema({
             content: { type: String, required: true },
             city: { type: mongoose.Schema.Types.ObjectId, ref: 'city' },
             createdAt: { type: Date, default: Date.now },
+            destinations: [{ type: mongoose.Schema.Types.ObjectId, ref: 'destination' }],
         },
     ],
     createdAt: {

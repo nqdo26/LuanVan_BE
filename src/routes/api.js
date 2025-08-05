@@ -80,6 +80,7 @@ const {
     deleteChat,
     getChatHistory,
     getChatById,
+    getChatCompletion,
 } = require('../controllers/chatController');
 
 const routerAPI = express.Router();
@@ -213,6 +214,7 @@ routerAPI.get('/chats', auth, getChatHistory); // Lấy lịch sử chat
 routerAPI.post('/chat/completions', auth, createChatCompletion);
 routerAPI.post('/chat/new', auth, createNewChat);
 routerAPI.delete('/chat/:id', auth, deleteChat);
-routerAPI.get('/chats/:id', auth, getChatById); 
+routerAPI.get('/chats/:id', auth, getChatById);
+routerAPI.get('/chat/completion/:id', auth, getChatCompletion); // Lấy chat với populate destinations
 
 module.exports = routerAPI;
