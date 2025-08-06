@@ -413,6 +413,7 @@ const updateDestination = async (id, data, files) => {
         };
 
         const url = process.env.RAG_SERVER_URL || 'http://localhost:8000';
+        await axios.post(`${url}/v1/update`, updatePayload);
     } catch (error) {
         console.error('[RAG UPDATE ERROR] Lỗi gửi dữ liệu cập nhật đến RAG server:', error.message);
         console.error('url:', process.env.RAG_SERVER_URL);
