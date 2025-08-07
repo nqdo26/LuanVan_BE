@@ -89,6 +89,14 @@ const getDestinationById = async (req, res) => {
                 fnb: destination.album?.fnb || [],
                 extra: destination.album?.extra || [],
             },
+            // Thêm images cho CardDestGobot
+            images: [
+                ...(destination.album?.space || []),
+                ...(destination.album?.fnb || []),
+                ...(destination.album?.extra || []),
+            ],
+            // Thêm statistics cho rating
+            statistics: destination.statistics || { averageRating: 0, totalRate: 0, views: 0 },
         };
 
         res.status(200).json({ EC: 0, data: response });
