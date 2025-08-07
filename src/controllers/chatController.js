@@ -114,7 +114,7 @@ const createChatCompletion = async (req, res) => {
         // Sử dụng model phù hợp cho chatbot du lịch
         let selectedModel = 'llama-3.3-70b-versatile'; // Thay đổi từ deepseek-r1
 
-        console.log(`🤖 [MODEL SELECTION] Using travel-friendly model: ${selectedModel}`);
+  
 
         const payload = {
             messages,
