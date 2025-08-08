@@ -4,11 +4,11 @@ const Chat = require('../models/chat');
 // Hàm chọn model tối ưu dựa trên strategy
 const selectOptimalModel = (strategy = 'balanced') => {
     const models = {
-        // Model chính - thân thiện cho chatbot du lịch
-        primary: 'llama-3.3-70b-versatile',
-        // Model backup - nhanh và ổn định
-        backup: 'llama-3.1-70b-versatile',
-        // Model tiết kiệm - hiệu quả cho query đơn giản
+        // Model chính - OpenAI GPT OSS 120B mạnh nhất
+        primary: 'openai/gpt-oss-120b',
+        // Model backup - Llama 3.3 70B ổn định
+        backup: 'llama-3.3-70b-versatile',
+        // Model tiết kiệm - Mixtral nhanh và hiệu quả
         economical: 'mixtral-8x7b-32768',
     };
 
@@ -112,10 +112,9 @@ const createChatCompletion = async (req, res) => {
         }
 
         // Sử dụng model phù hợp cho chatbot du lịch
-        let selectedModel = 'llama-3.3-70b-versatile'; // Thay đổi từ deepseek-r1
+        let selectedModel = 'openai/gpt-oss-120b'; // Model chính mạnh nhất
 
-  
-
+        console.log(`🤖 [CHAT] Model: ${selectedModel} | User: ${userId} | City: ${cityId}`);
         const payload = {
             messages,
             model: selectedModel, // Luôn gửi model được chọn
@@ -216,10 +215,6 @@ const createChatCompletion = async (req, res) => {
                     // Loại bỏ trùng lặp
                     const uniqueDestinationIds = [...new Set(destinationIds)];
                     assistantMsgData.destinations = uniqueDestinationIds;
-
-                    console.log(
-                        `💾 [DESTINATIONS] Saving ${uniqueDestinationIds.length} destinations for assistant message`,
-                    );
                 }
 
                 chatMsgArr.push(assistantMsgData);
