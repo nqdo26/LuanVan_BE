@@ -16,7 +16,6 @@ const commentSchema = new mongoose.Schema({
     content: String,
     visitDate: Date,
     images: [String],
-    likeCount: { type: Number, default: 0 },
 });
 
 const Comment = mongoose.model('comment', commentSchema);
