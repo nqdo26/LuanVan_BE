@@ -19,7 +19,7 @@ const createUserService = async (email, password, fullName, avatar) => {
             };
         }
 
-        const defaultAvatar = '/images/default-avt.png';
+        const defaultAvatar = 'https://ui-avatars.com/api/?name=User&background=0D8ABC&color=fff&size=100';
         const userAvatar = avatar || defaultAvatar;
 
         const hashPassword = await bcrypt.hash(password, saltRounds);
