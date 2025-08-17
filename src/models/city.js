@@ -38,6 +38,13 @@ citySchema.pre('save', function (next) {
     if (!this.slug) {
         this.slug = slugify(this.name, { lower: true });
     }
+    this.updatedAt = new Date();
+    next();
+});
+
+
+citySchema.pre(['findOneAndUpdate', 'updateOne', 'updateMany'], function (next) {
+    this.set({ updatedAt: new Date() });
     next();
 });
 

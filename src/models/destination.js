@@ -56,6 +56,12 @@ destinationSchema.pre('save', function (next) {
     if (!this.slug) {
         this.slug = slugify(this.title, { lower: true });
     }
+    this.updatedAt = new Date();
+    next();
+});
+
+destinationSchema.pre(['findOneAndUpdate', 'updateOne', 'updateMany'], function (next) {
+    this.set({ updatedAt: new Date() });
     next();
 });
 

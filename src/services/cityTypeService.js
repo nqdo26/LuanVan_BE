@@ -91,9 +91,17 @@ const getCityTypesService = async () => {
         let result = await CityType.aggregate([
             {
                 $lookup: {
-                    from: 'city',
-                    localField: '_id',
-                    foreignField: 'type',
+                    from: 'cities',
+                    let: { cityTypeId: '$_id' },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $in: ['$$cityTypeId', '$type'],
+                                },
+                            },
+                        },
+                    ],
                     as: 'cities',
                 },
             },
