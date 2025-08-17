@@ -18,9 +18,27 @@ const createUserService = async (email, password, fullName, avatar) => {
                 EM: `Email ${email} has already been existed.`,
             };
         }
-        
-        const userName = encodeURIComponent(fullName || 'User');
-        const defaultAvatar = `https://ui-avatars.com/api/?name=${userName}&background=0D8ABC&color=fff&size=100`;
+
+        const nameWords = (fullName || 'User').trim().split(' ');
+        const lastName = nameWords[nameWords.length - 1]; 
+        const firstChar = lastName.charAt(0).toUpperCase(); 
+
+        // Random màu nền
+        const colors = [
+            'FF6B6B',
+            '4ECDC4',
+            '45B7D1',
+            'FFA07A',
+            '98D8C8',
+            'F7DC6F',
+            'BB8FCE',
+            '85C1E9',
+            'F8C471',
+            'F1948A',
+        ];
+        const randomColor = colors[Math.floor(Math.random() * colors.length)];
+
+        const defaultAvatar = `https://ui-avatars.com/api/?name=${firstChar}&background=${randomColor}&color=fff&size=100`;
         const userAvatar = avatar || defaultAvatar;
 
         const hashPassword = await bcrypt.hash(password, saltRounds);
