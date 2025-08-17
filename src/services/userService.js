@@ -19,7 +19,7 @@ const createUserService = async (email, password, fullName, avatar) => {
             };
         }
 
-        const defaultAvatar = 'http://localhost:8080/public/images/default-avatar.png';
+        const defaultAvatar = '/images/default-avt.png';
         const userAvatar = avatar || defaultAvatar;
 
         const hashPassword = await bcrypt.hash(password, saltRounds);
