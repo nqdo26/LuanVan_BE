@@ -18,8 +18,9 @@ const createUserService = async (email, password, fullName, avatar) => {
                 EM: `Email ${email} has already been existed.`,
             };
         }
-
-        const defaultAvatar = 'https://ui-avatars.com/api/?name=User&background=0D8ABC&color=fff&size=100';
+        
+        const userName = encodeURIComponent(fullName || 'User');
+        const defaultAvatar = `https://ui-avatars.com/api/?name=${userName}&background=0D8ABC&color=fff&size=100`;
         const userAvatar = avatar || defaultAvatar;
 
         const hashPassword = await bcrypt.hash(password, saltRounds);
