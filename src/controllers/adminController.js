@@ -56,26 +56,31 @@ const getStatistics = async (req, res) => {
             }),
         );
 
-        // Lấy 7 ngày gần nhất
         const dayjs = require('dayjs');
         const days = Array.from({ length: 7 }, (_, i) =>
             dayjs()
                 .subtract(6 - i, 'day')
                 .format('DD/MM'),
         );
-        const userCounts = await User.aggregate([
-            {
-                $group: {
-                    _id: { $dateToString: { format: '%d/%m', date: '$createdAt' } },
-                    users: { $sum: 1 },
-                },
-            },
-        ]);
-        // Map về đủ 7 ngày, nếu không có thì users = 0
-        const recentUsers = days.map((date) => {
-            const found = userCounts.find((u) => u._id === date);
-            return { _id: date, users: found ? found.users : 0 };
-        });
+
+        const recentUsers = await Promise.all(
+            days.map(async (date) => {
+                const [day, month] = date.split('/');
+                const currentYear = dayjs().year();
+                const endOfDay = dayjs()
+                    .year(currentYear)
+                    .month(parseInt(month) - 1)
+                    .date(parseInt(day))
+                    .endOf('day')
+                    .toDate();
+
+                const totalUsers = await User.countDocuments({
+                    createdAt: { $lte: endOfDay },
+                });
+
+                return { _id: date, users: totalUsers };
+            }),
+        );
         res.json({
             userCount,
             adminCount,
