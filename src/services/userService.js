@@ -1,6 +1,10 @@
 require('dotenv').config();
 
 const User = require('../models/user');
+const Destination = require('../models/destination');
+const City = require('../models/city');
+const Tour = require('../models/tour');
+const Comment = require('../models/comment');
 
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
@@ -20,8 +24,8 @@ const createUserService = async (email, password, fullName, avatar) => {
         }
 
         const nameWords = (fullName || 'User').trim().split(' ');
-        const lastName = nameWords[nameWords.length - 1]; 
-        const firstChar = lastName.charAt(0).toUpperCase(); 
+        const lastName = nameWords[nameWords.length - 1];
+        const firstChar = lastName.charAt(0).toUpperCase();
 
         // Random màu nền
         const colors = [
@@ -68,21 +72,95 @@ const createUserService = async (email, password, fullName, avatar) => {
 
 const deleteUserService = async (id) => {
     try {
-        let result = await User.findByIdAndDelete(id);
-        if (!result) {
+        // Convert string id to ObjectId nếu cần
+        const mongoose = require('mongoose');
+        const userId = mongoose.Types.ObjectId.isValid(id) ? new mongoose.Types.ObjectId(id) : id;
+
+        // Kiểm tra user có tồn tại không
+        let user = await User.findById(userId);
+        if (!user) {
             return {
                 EC: 1,
                 EM: 'User not found',
             };
         }
+
+        console.log('Deleting user:', userId);
+
+        // Lấy danh sách destinations sẽ bị xóa để cleanup favorites
+        const destinationsToDelete = await Destination.find({ createdBy: userId }).select('_id');
+        const deletedDestinationIds = destinationsToDelete.map((dest) => dest._id);
+
+        // Đếm số lượng dữ liệu sẽ bị xóa để thống kê (với debug)
+        const destinationCount = await Destination.countDocuments({ createdBy: userId });
+        const cityCount = await City.countDocuments({ createdBy: userId });
+        const tourCount = await Tour.countDocuments({ userId: userId });
+        const commentCount = await Comment.countDocuments({
+            $or: [{ userId: userId }, { userId: userId.toString() }, { userId: id }],
+        });
+
+        console.log('Data to delete:', {
+            destinations: destinationCount,
+            cities: cityCount,
+            tours: tourCount,
+            comments: commentCount,
+        });
+
+        // Xóa tất cả destinations được tạo bởi user này
+        const deletedDestinations = await Destination.deleteMany({ createdBy: userId });
+        console.log('Deleted destinations:', deletedDestinations.deletedCount);
+
+        // Xóa tất cả cities được tạo bởi user này
+        const deletedCities = await City.deleteMany({ createdBy: userId });
+        console.log('Deleted cities:', deletedCities.deletedCount);
+
+        // Xóa tất cả tours của user này
+        const deletedTours = await Tour.deleteMany({ userId: userId });
+        console.log('Deleted tours:', deletedTours.deletedCount);
+
+        // Xóa tất cả comments của user này (thử cả ObjectId và string)
+        const deletedComments = await Comment.deleteMany({
+            $or: [{ userId: userId }, { userId: userId.toString() }, { userId: id }],
+        });
+        console.log('Deleted comments:', deletedComments.deletedCount);
+
+        // Xóa destinations đã bị xóa khỏi favorites của các user khác
+        if (deletedDestinationIds.length > 0) {
+            await User.updateMany({}, { $pull: { favortites: { $in: deletedDestinationIds } } });
+        }
+
+        // Cuối cùng xóa user
+        let result = await User.findByIdAndDelete(userId);
+
         return {
             EC: 0,
-            EM: 'Delete success',
+            EM: 'User and all related data deleted successfully',
+            data: {
+                deletedUser: {
+                    id: result._id,
+                    email: result.email,
+                    fullName: result.fullName,
+                },
+                deletedCounts: {
+                    destinations: deletedDestinations.deletedCount,
+                    cities: deletedCities.deletedCount,
+                    tours: deletedTours.deletedCount,
+                    comments: deletedComments.deletedCount,
+                },
+                actualDeleted: {
+                    destinations: deletedDestinations.deletedCount,
+                    cities: deletedCities.deletedCount,
+                    tours: deletedTours.deletedCount,
+                    comments: deletedComments.deletedCount,
+                },
+                message: `Đã xóa user và tất cả dữ liệu liên quan: ${deletedDestinations.deletedCount} destinations, ${deletedCities.deletedCount} cities, ${deletedTours.deletedCount} tours, ${deletedComments.deletedCount} comments`,
+            },
         };
     } catch (error) {
+        console.error('Error deleting user and related data:', error);
         return {
             EC: 2,
-            EM: 'An error occurred',
+            EM: 'An error occurred while deleting user and related data',
         };
     }
 };
